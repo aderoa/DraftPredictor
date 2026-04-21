@@ -565,7 +565,7 @@
     
     <div id="loading" class="loading">
       <div class="loading-spinner"></div>
-      <p class="loading-text">Fetching mock draft data...</p>
+      <p class="loading-text">Loading draft predictions…</p>
     </div>
     
     <div id="tableWrapper" class="table-wrapper" style="display:none;"></div>
@@ -867,7 +867,7 @@
     function render(data) {
       const { players, sources, sourceMaxRanked, pickTeamMap, availableSet } = data;
       if (players.length === 0) {
-        document.getElementById('error').textContent = 'No draft data found.';
+        document.getElementById('error').textContent = 'No draft data available yet — check back closer to draft night.';
         document.getElementById('error').style.display = 'block';
         return;
       }
@@ -905,13 +905,13 @@
       
       // Table
       let html = '<table><thead><tr>';
-      html += '<th class="col-rank" data-col="finalRank" data-type="num">Rank</th>';
+      html += '<th class="col-rank" data-col="finalRank" data-type="num" title="Final predicted draft position based on the weighted aggregation of all sources">Rank</th>';
       html += '<th data-col="team" data-type="str" style="width:55px">Team</th>';
       html += '<th class="col-player" data-col="name" data-type="str">Player</th>';
-      html += '<th class="col-score" data-col="score" data-type="num">Score</th>';
-      html += '<th class="col-sources" data-col="sourcesRanked" data-type="num">Srcs</th>';
-      html += '<th data-col="consensus" data-type="num">Spread</th>';
-      html += '<th data-col="simPct" data-type="num">Prob</th>';
+      html += '<th class="col-score" data-col="score" data-type="num" title="Aggregated weighted score across all mock draft sources — lower is better (closer to #1)">Score</th>';
+      html += '<th class="col-sources" data-col="sourcesRanked" data-type="num" title="Number of mock draft sources that included this player in their rankings">Srcs</th>';
+      html += '<th data-col="consensus" data-type="num" title="Spread between the highest and lowest mock-draft placement for this player (smaller = more agreement across sources)">Spread</th>';
+      html += '<th data-col="simPct" data-type="num" title="Simulated probability the player is drafted at this exact slot">Prob</th>';
       
       for (const src of sources) {
         const shortName = src.name.replace('AGG RANK', 'AGG')
@@ -921,7 +921,8 @@
                                    .replace('Bleacher', 'BR')
                                    .replace('Babcock', 'Bab')
                                    .replace('Athletic', 'Ath');
-        html += `<th data-col="mock_${src.name}" data-type="num">${shortName}<br><span style="font-size:0.6rem;color:var(--text-muted)">×${src.weight}</span></th>`;
+        const fullLabel = src.name.replace(/"/g, '&quot;');
+        html += `<th data-col="mock_${src.name}" data-type="num" title="${fullLabel} — weight ×${src.weight}">${shortName}<br><span style="font-size:0.6rem;color:var(--text-muted)">×${src.weight}</span></th>`;
       }
       
       html += '</tr></thead><tbody>';
@@ -1143,9 +1144,9 @@
         render(data);
         
       } catch (err) {
-        console.error('Error:', err);
+        console.error('[Draft]', err);
         document.getElementById('loading').style.display = 'none';
-        document.getElementById('error').textContent = 'Error loading draft data: ' + err.message;
+        document.getElementById('error').textContent = "Couldn't load draft predictions. Try refreshing — if this keeps happening, the data might be updating right now.";
         document.getElementById('error').style.display = 'block';
       }
     }

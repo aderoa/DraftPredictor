@@ -598,6 +598,7 @@
       'NBADraft': 3,
       'CBS Sports': 3,
       'No Ceilings': 2,
+      'The Ringer': 2,
       'USAT': 4,
       'Yahoo!': 2,
       'SB Nation': 1
@@ -658,6 +659,15 @@
           activeSources.push({ name: sourceName, weight, colIdx: idx });
         }
       }
+
+      // Find stats columns (PPG/RPG/APG) — these are manually populated in the
+      // sheet from the post-season NCAA extract. Looked up by header name so
+      // column order changes don't break the integration.
+      const statCols = {
+        PPG: header.findIndex(h => h.trim() === 'PPG'),
+        RPG: header.findIndex(h => h.trim() === 'RPG'),
+        APG: header.findIndex(h => h.trim() === 'APG'),
+      };
       
       // Player name column (first column)
       const nameIdx = 0;
@@ -692,7 +702,20 @@
         }
         
         if (hasAnyRank) {
-          rawPlayers.push({ name, ranks });
+          // Pull PPG/RPG/APG if columns are present; empty/missing → undefined
+          const readStat = (idx) => {
+            if (idx < 0) return undefined;
+            const v = row[idx]?.trim();
+            if (v === '' || v === undefined || isNaN(parseFloat(v))) return undefined;
+            return parseFloat(v);
+          };
+          rawPlayers.push({
+            name,
+            ranks,
+            ppg: readStat(statCols.PPG),
+            rpg: readStat(statCols.RPG),
+            apg: readStat(statCols.APG),
+          });
         }
       }
       
@@ -746,7 +769,10 @@
           ranks: p.ranks,
           consensus: Math.round(consensus * 10) / 10,
           bestRank: Math.min(...ranksArray),
-          worstRank: Math.max(...ranksArray)
+          worstRank: Math.max(...ranksArray),
+          ppg: p.ppg,
+          rpg: p.rpg,
+          apg: p.apg
         };
       });
       
@@ -912,6 +938,9 @@
       html += '<th class="col-sources" data-col="sourcesRanked" data-type="num" title="Number of mock draft sources that included this player in their rankings">Srcs</th>';
       html += '<th data-col="consensus" data-type="num" title="Spread between the highest and lowest mock-draft placement for this player (smaller = more agreement across sources)">Spread</th>';
       html += '<th data-col="simPct" data-type="num" title="Simulated probability the player is drafted at this exact slot">Prob</th>';
+      html += '<th data-col="ppg" data-type="num" title="Points per game in 2025-26 college season (empty = international/no NCAA data)">PPG</th>';
+      html += '<th data-col="rpg" data-type="num" title="Rebounds per game in 2025-26 college season (empty = international/no NCAA data)">RPG</th>';
+      html += '<th data-col="apg" data-type="num" title="Assists per game in 2025-26 college season (empty = international/no NCAA data)">APG</th>';
       
       for (const src of sources) {
         const shortName = src.name.replace('AGG RANK', 'AGG')
@@ -954,6 +983,16 @@
         </td>`;
         const pctColor = p.simPct >= 80 ? 'var(--accent-gold)' : p.simPct >= 50 ? 'var(--accent-green)' : p.simPct >= 30 ? 'var(--accent-blue)' : p.simPct > 0 ? 'var(--accent-purple)' : 'var(--text-muted)';
         html += `<td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;font-weight:700;color:${pctColor}">${p.simPct > 0 ? p.simPct + '%' : '—'}</td>`;
+        // Per-game stats — mono font, muted "—" for prospects without NCAA data
+        const statCell = (v) => {
+          if (v === undefined || v === null || isNaN(v)) {
+            return `<td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text-muted)">—</td>`;
+          }
+          return `<td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;font-weight:600">${v.toFixed(1)}</td>`;
+        };
+        html += statCell(p.ppg);
+        html += statCell(p.rpg);
+        html += statCell(p.apg);
         
         for (const src of sources) {
           const rank = p.ranks[src.name];
@@ -1078,7 +1117,14 @@
             if (typeof va === 'string') {
               cmp = va.localeCompare(vb);
             } else {
-              cmp = va - vb;
+              // Missing numeric values (e.g. international prospects without NCAA stats)
+              // always sink to the bottom, regardless of sort direction.
+              const aBad = va === undefined || va === null || Number.isNaN(va);
+              const bBad = vb === undefined || vb === null || Number.isNaN(vb);
+              if (aBad && bBad) cmp = 0;
+              else if (aBad) return 1;   // a sinks
+              else if (bBad) return -1;  // b sinks
+              else cmp = va - vb;
             }
             
             return currentSort.dir === 'desc' ? -cmp : cmp;

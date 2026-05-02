@@ -548,6 +548,12 @@
       table { font-size: 0.75rem; }
       td, th { padding: 0.4rem 0.35rem; }
     }
+    /* Combine invitation tick (Draft Combine + G League Combine columns) */
+    .combine-tick {
+      color: var(--accent-green);
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
   </style>
 </head>
 <body>
@@ -668,6 +674,29 @@
         RPG: header.findIndex(h => h.trim() === 'RPG'),
         APG: header.findIndex(h => h.trim() === 'APG'),
       };
+
+      // Combine invitations — looked up by header name so column position can
+      // shift without breaking. The bio block in this sheet has its own
+      // "PLAYER" header column; we want THAT column (not col 0, which is the
+      // mock-draft order without a label). The second "PLAYER" header reliably
+      // marks the bio block.
+      const playerHeaders = [];
+      header.forEach((h, idx) => { if ((h || '').trim() === 'PLAYER') playerHeaders.push(idx); });
+      // Bio block name col = the LAST "PLAYER" header — typically col 26.
+      const bioNameIdx = playerHeaders.length ? playerHeaders[playerHeaders.length - 1] : -1;
+      const dcIdx = header.findIndex(h => h.trim() === 'DRAFT COMBINE');
+      const glIdx = header.findIndex(h => h.trim() === 'GL COMBINE');
+      const combineByName = {};
+      if (bioNameIdx >= 0 && (dcIdx >= 0 || glIdx >= 0)) {
+        for (let i = 1; i < rows.length; i++) {
+          const r = rows[i];
+          const bn = (r[bioNameIdx] || '').trim();
+          if (!bn) continue;
+          const dc = dcIdx >= 0 && (r[dcIdx] || '').trim().toUpperCase() === 'YES';
+          const gl = glIdx >= 0 && (r[glIdx] || '').trim().toUpperCase() === 'YES';
+          if (dc || gl) combineByName[bn] = { dc, gl };
+        }
+      }
       
       // Player name column (first column)
       const nameIdx = 0;
@@ -715,6 +744,7 @@
             ppg: readStat(statCols.PPG),
             rpg: readStat(statCols.RPG),
             apg: readStat(statCols.APG),
+            combine: combineByName[name] || { dc: false, gl: false },
           });
         }
       }
@@ -772,7 +802,12 @@
           worstRank: Math.max(...ranksArray),
           ppg: p.ppg,
           rpg: p.rpg,
-          apg: p.apg
+          apg: p.apg,
+          combine: p.combine,
+          // Flat boolean-as-number fields make the existing sort routine
+          // (which reads a[col] generically) work for these columns too.
+          dcInvite: (p.combine && p.combine.dc) ? 1 : 0,
+          glInvite: (p.combine && p.combine.gl) ? 1 : 0,
         };
       });
       
@@ -941,6 +976,8 @@
       html += '<th data-col="ppg" data-type="num" title="Points per game in 2025-26 college season (empty = international/no NCAA data)">PPG</th>';
       html += '<th data-col="rpg" data-type="num" title="Rebounds per game in 2025-26 college season (empty = international/no NCAA data)">RPG</th>';
       html += '<th data-col="apg" data-type="num" title="Assists per game in 2025-26 college season (empty = international/no NCAA data)">APG</th>';
+      html += '<th data-col="dcInvite" data-type="num" title="NBA Draft Combine — invited">DC</th>';
+      html += '<th data-col="glInvite" data-type="num" title="G League Combine — invited">GL</th>';
       
       for (const src of sources) {
         const shortName = src.name.replace('AGG RANK', 'AGG')
@@ -993,6 +1030,10 @@
         html += statCell(p.ppg);
         html += statCell(p.rpg);
         html += statCell(p.apg);
+        // Combine invitation cells. data-sort uses 1/0 so num-sort keeps invitees together.
+        const combineCell = (invited) => `<td data-sort="${invited ? 1 : 0}" style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.78rem">${invited ? '<span class="combine-tick">✓</span>' : '<span style="color:var(--text-muted)">—</span>'}</td>`;
+        html += combineCell(p.combine && p.combine.dc);
+        html += combineCell(p.combine && p.combine.gl);
         
         for (const src of sources) {
           const rank = p.ranks[src.name];
@@ -1091,6 +1132,8 @@
             if (col === 'score') currentSort.dir = 'desc';
             // For sourcesRanked, default descending
             if (col === 'sourcesRanked') currentSort.dir = 'desc';
+            // Combine columns: invitees on top by default
+            if (col === 'dcInvite' || col === 'glInvite') currentSort.dir = 'desc';
           }
           
           // Clear sort indicators

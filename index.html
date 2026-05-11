@@ -404,6 +404,33 @@
       margin-top: 3rem;
     }
     
+    #btnCopyPresto {
+      position: fixed;
+      bottom: 12px;
+      right: 12px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+      cursor: pointer;
+      z-index: 50;
+      transition: background 0.2s, transform 0.15s, opacity 0.2s;
+      opacity: 0.5;
+    }
+    #btnCopyPresto:hover {
+      background: rgba(255,255,255,0.18);
+      opacity: 1;
+      transform: scale(1.15);
+    }
+    #btnCopyPresto.copied {
+      background: var(--accent-green);
+      opacity: 1;
+    }
+    #btnCopyPresto.failed {
+      background: var(--accent-red, #b91c1c);
+      opacity: 1;
+    }
+    
     .undrafted-header {
       margin-bottom: 1.5rem;
     }
@@ -698,6 +725,34 @@
         }
       }
 
+      // Per-prospect bio data — position, age, school/club, country.
+      // Lives in the right-side "bio block": player name is at the LAST PLAYER
+      // header column (bioNameIdx); other fields are at known column headers.
+      // Used to enrich the Presto export with parenthetical descriptors.
+      const posIdx = header.findIndex(h => h.trim() === 'POSITION');
+      const schoolIdx = header.findIndex((h, i) => h.trim() === 'TEAM' && i > bioNameIdx);
+      const countryIdx = header.findIndex(h => h.trim() === 'COUNTRY');
+      const ageDaysIdx = header.findIndex(h => h.trim() === 'AGE DAYS');
+      const bioByName = {};
+      if (bioNameIdx >= 0) {
+        for (let i = 1; i < rows.length; i++) {
+          const r = rows[i];
+          const bn = (r[bioNameIdx] || '').trim();
+          if (!bn) continue;
+          const bio = {};
+          if (posIdx >= 0) bio.position = (r[posIdx] || '').trim();
+          if (schoolIdx >= 0) bio.school = (r[schoolIdx] || '').trim();
+          if (countryIdx >= 0) bio.country = (r[countryIdx] || '').trim();
+          if (ageDaysIdx >= 0) {
+            const days = parseInt((r[ageDaysIdx] || '').trim(), 10);
+            if (!isNaN(days) && days > 0) bio.ageYears = Math.floor(days / 365.25);
+          }
+          if (bio.position || bio.school || bio.country || bio.ageYears) {
+            bioByName[bn] = bio;
+          }
+        }
+      }
+
       // Pre-draft workouts. WO PLAYER (col AQ) names the player; WO TEAM (col AR)
       // is the team they worked out for. Multiple rows can list the same player
       // with different teams — each becomes a separate workout. Worked out for
@@ -807,6 +862,7 @@
             apg: readStat(statCols.APG),
             combine: combineByName[name] || { dc: false, gl: false },
             workoutTeams: workoutsByPlayer[name] || new Set(),
+            bio: bioByName[name] || null,
           });
         }
       }
@@ -866,6 +922,7 @@
           rpg: p.rpg,
           apg: p.apg,
           combine: p.combine,
+          bio: p.bio,
           // Flat boolean-as-number fields make the existing sort routine
           // (which reads a[col] generically) work for these columns too.
           dcInvite: (p.combine && p.combine.dc) ? 1 : 0,
@@ -1227,6 +1284,16 @@
       const wrapper = document.getElementById('tableWrapper');
       wrapper.innerHTML = html;
       wrapper.style.display = 'block';
+      // Once the table is rendered, reveal the (intentionally undescriptive)
+      // editorial corner dot used to copy Presto-pasteable HTML. Kept hidden
+      // until data is ready so the dot doesn't appear during loading.
+      const cpBtn = document.getElementById('btnCopyPresto');
+      if (cpBtn) {
+        cpBtn.style.display = 'block';
+        // Stash the rendered player list + pickTeamMap on a global so the
+        // Presto generator can read them later without re-running compute.
+        window.__draftPredictorLatest = { players, pickTeamMap };
+      }
       
       // Sortable columns
       setupSorting(players, sources, maxScore, pickTeamMap);
@@ -1418,7 +1485,130 @@
       }
     }
     
+    // =================================================================
+    // PRESTO HTML EXPORT
+    // =================================================================
+    // Generates plain HTML suitable for pasting into Presto/HoopsHype
+    // articles. Inline styles only (Presto strips classes). Format mirrors
+    // the on-page rendering but flattened for a CMS-friendly structure.
+
+    const TEAM_FULL_NAME_PRESTO = {
+      ATL:'Atlanta Hawks', BOS:'Boston Celtics', BKN:'Brooklyn Nets',
+      CHA:'Charlotte Hornets', CHI:'Chicago Bulls', CLE:'Cleveland Cavaliers',
+      DAL:'Dallas Mavericks', DEN:'Denver Nuggets', DET:'Detroit Pistons',
+      GSW:'Golden State Warriors', HOU:'Houston Rockets', IND:'Indiana Pacers',
+      LAC:'LA Clippers', LAL:'Los Angeles Lakers', MEM:'Memphis Grizzlies',
+      MIA:'Miami Heat', MIL:'Milwaukee Bucks', MIN:'Minnesota Timberwolves',
+      NOP:'New Orleans Pelicans', NYK:'New York Knicks', OKC:'Oklahoma City Thunder',
+      ORL:'Orlando Magic', PHI:'Philadelphia 76ers', PHX:'Phoenix Suns',
+      POR:'Portland Trail Blazers', SAC:'Sacramento Kings', SAS:'San Antonio Spurs',
+      TOR:'Toronto Raptors', UTA:'Utah Jazz', WAS:'Washington Wizards',
+    };
+
+    function escapePrestoHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+    }
+
+    function prestoBio(p) {
+      const bio = p.bio || null;
+      if (!bio) return '';
+      const bits = [];
+      if (bio.position) bits.push(bio.position);
+      if (bio.ageYears) bits.push(bio.ageYears + 'y');
+      if (bio.school) bits.push(bio.school);
+      else if (bio.country) bits.push(bio.country);
+      return bits.join(' \u00b7 ');
+    }
+
+    function generatePrestoHtml() {
+      const latest = window.__draftPredictorLatest;
+      if (!latest) return '';
+      const { players, pickTeamMap } = latest;
+      const drafted = players
+        .filter(p => p.finalRank && p.finalRank >= 1 && p.finalRank <= 60)
+        .sort((a, b) => a.finalRank - b.finalRank);
+      if (!drafted.length) return '';
+
+      let out = '<div style="font-family:sans-serif;max-width:700px;margin:0 auto">\n';
+      out += '  <p style="margin:0 0 1em">The draft order is set after the lottery, and the Wizards are officially on the clock with the first pick. Beyond that, every front office is gathering information and working prospects out to figure out the best options for their rosters. Combining the most reliable mock drafts and workout information, we\u2019ve created a Draft Predictor to determine how the 2026 NBA Draft landscape looks right now. Here are the results:</p>\n';
+
+      let inRoundTwo = false;
+      out += '  <h3 style="margin:1.2em 0 .3em;font-size:1.15em;border-bottom:2px solid #b45309;padding-bottom:.15em">First Round</h3>\n';
+      out += '  <ol style="margin:.3em 0 1em 0;padding-left:1.5em">\n';
+      for (const p of drafted) {
+        if (!inRoundTwo && p.finalRank > 30) {
+          out += '  </ol>\n';
+          out += '  <h3 style="margin:1.2em 0 .3em;font-size:1.15em;border-bottom:2px solid #b45309;padding-bottom:.15em">Second Round</h3>\n';
+          out += '  <ol start="31" style="margin:.3em 0 1em 0;padding-left:1.5em">\n';
+          inRoundTwo = true;
+        }
+        const teamAbbr = (pickTeamMap[p.finalRank] || '').toUpperCase();
+        const teamName = TEAM_FULL_NAME_PRESTO[teamAbbr] || teamAbbr || '(no team)';
+        const bioText = prestoBio(p);
+        const bioPart = bioText ? ' <span style="color:#666;font-size:.9em">(' + escapePrestoHtml(bioText) + ')</span>' : '';
+        out += '    <li style="margin:.2em 0"><strong>' + escapePrestoHtml(teamName) + '</strong>: ' + escapePrestoHtml(p.name) + bioPart + '</li>\n';
+      }
+      out += '  </ol>\n';
+      out += '</div>';
+      return out;
+    }
+
+    function copyPrestoCode() {
+      const btn = document.getElementById('btnCopyPresto');
+      if (!btn) return;
+      const code = generatePrestoHtml();
+      if (!code) {
+        flashPrestoBtn(btn, 'Nothing to copy', 'failed');
+        return;
+      }
+      const finishOk = () => flashPrestoBtn(btn, '\u2713 Copied!', 'copied');
+      const finishErr = () => prestoFallbackCopy(code, btn);
+      const blob = new Blob([code], { type: 'text/plain' });
+      if (navigator.clipboard && navigator.clipboard.write && typeof ClipboardItem !== 'undefined') {
+        navigator.clipboard.write([new ClipboardItem({ 'text/plain': blob })])
+          .then(finishOk).catch(finishErr);
+      } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(finishOk).catch(finishErr);
+      } else {
+        finishErr();
+      }
+    }
+
+    function prestoFallbackCopy(text, btn) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.top = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        flashPrestoBtn(btn, '\u2713 Copied!', 'copied');
+      } catch (e) {
+        flashPrestoBtn(btn, 'Copy failed', 'failed');
+      }
+      document.body.removeChild(ta);
+    }
+
+    function flashPrestoBtn(btn, msg, cls) {
+      // The dot is text-less; only the color class signals success/failure.
+      btn.classList.remove('copied', 'failed');
+      btn.classList.add(cls);
+      setTimeout(() => {
+        btn.classList.remove(cls);
+      }, 1800);
+    }
+
     init();
   </script>
+  <!-- Editorial corner dot (intentionally undescriptive — used to
+       generate a Presto-pasteable HTML export of the current draft
+       order. Public visitors who notice it won't know what it is). -->
+  <div id="btnCopyPresto"
+       onclick="copyPrestoCode()"
+       aria-hidden="true"
+       title=""
+       style="display:none"></div>
 </body>
 </html>

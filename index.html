@@ -697,6 +697,26 @@
           if (dc || gl) combineByName[bn] = { dc, gl };
         }
       }
+
+      // Pre-draft workouts. WO PLAYER (col AQ) names the player; WO TEAM (col AR)
+      // is the team abbreviation they worked out for. Multiple rows can list
+      // the same player with different teams — each becomes a separate workout.
+      // Worked out for a team currently picking = +5% of total source weight
+      // added to that player's vote at the team's pick slot (see cascade below).
+      const woPlayerIdx = header.findIndex(h => h.trim() === 'WO PLAYER');
+      const woTeamIdx = header.findIndex(h => h.trim() === 'WO TEAM');
+      const workoutsByPlayer = {}; // name -> Set of team abbrevs
+      if (woPlayerIdx >= 0 && woTeamIdx >= 0) {
+        for (let i = 1; i < rows.length; i++) {
+          const r = rows[i];
+          const woPlayer = (r[woPlayerIdx] || '').trim();
+          const woTeam = (r[woTeamIdx] || '').trim().toUpperCase();
+          if (woPlayer && woTeam) {
+            if (!workoutsByPlayer[woPlayer]) workoutsByPlayer[woPlayer] = new Set();
+            workoutsByPlayer[woPlayer].add(woTeam);
+          }
+        }
+      }
       
       // Player name column (first column)
       const nameIdx = 0;
@@ -745,6 +765,7 @@
             rpg: readStat(statCols.RPG),
             apg: readStat(statCols.APG),
             combine: combineByName[name] || { dc: false, gl: false },
+            workoutTeams: workoutsByPlayer[name] || new Set(),
           });
         }
       }
@@ -808,6 +829,12 @@
           // (which reads a[col] generically) work for these columns too.
           dcInvite: (p.combine && p.combine.dc) ? 1 : 0,
           glInvite: (p.combine && p.combine.gl) ? 1 : 0,
+          // Pre-draft workouts. workoutTeams (Set) is used by the cascade
+          // simulation; workoutTeamsArr is the display form; workoutCount
+          // is exposed for sortability.
+          workoutTeams: p.workoutTeams,
+          workoutTeamsArr: Array.from(p.workoutTeams).sort(),
+          workoutCount: p.workoutTeams ? p.workoutTeams.size : 0,
         };
       });
       
@@ -850,9 +877,26 @@
           }
         }
         
-        // Sort candidates by votes
+        // Workout boost: if the team picking at this slot has a candidate
+        // who worked out for them, add 5% of total source weight to that
+        // candidate's vote. Tracked separately so the UI can flag the row.
+        const teamPicking = pickTeamMap[pick];
+        const workoutBoostBy = {}; // candidateName -> true if boosted at this pick
+        if (teamPicking) {
+          const boost = totalSourceWeight * 0.05;
+          for (const candName of Object.keys(votes)) {
+            const player = players.find(p => p.name === candName);
+            if (player && player.workoutTeams && player.workoutTeams.has(teamPicking)) {
+              votes[candName] += boost;
+              workoutBoostBy[candName] = true;
+            }
+          }
+        }
+        
+        // Sort candidates by votes. Cap pct at 100 so a workout-boosted
+        // player who already had ~100% doesn't display as 105%.
         const candidates = Object.entries(votes)
-          .map(([name, weight]) => ({ name, pct: Math.round((weight / totalSourceWeight) * 100) }))
+          .map(([name, weight]) => ({ name, pct: Math.min(100, Math.round((weight / totalSourceWeight) * 100)) }))
           .sort((a, b) => b.pct - a.pct);
         
         if (candidates.length === 0) break;
@@ -863,6 +907,10 @@
         player.finalRank = pick;
         player.simPct = winner.pct;
         player.simPick = pick;
+        // Flag rows where the workout-team match actually changed the vote
+        // total at the team's pick slot (whether or not it changed the
+        // outcome — a player who would've won anyway still got the bonus).
+        player.workoutBoostApplied = !!workoutBoostBy[winner.name];
         drafted.push(player);
         available.delete(winner.name);
       }
@@ -978,6 +1026,7 @@
       html += '<th data-col="apg" data-type="num" title="Assists per game in 2025-26 college season (empty = international/no NCAA data)">APG</th>';
       html += '<th data-col="dcInvite" data-type="num" title="NBA Draft Combine — invited">DC</th>';
       html += '<th data-col="glInvite" data-type="num" title="G League Combine — invited">GL</th>';
+      html += '<th data-col="workoutCount" data-type="num" title="Pre-draft workouts on file. ★ = worked out for the team predicted to draft them — that match adds +5% to the player\'s vote at that pick slot.">WO</th>';
       
       for (const src of sources) {
         const shortName = src.name.replace('AGG RANK', 'AGG')
@@ -1005,7 +1054,15 @@
         html += `<tr class="${tierRow}" style="animation-delay: ${Math.min(i * 0.02, 1)}s">`;
         html += `<td class="rank-cell ${tier}">${p.finalRank}</td>`;
         const teamForPick = pickTeamMap[p.finalRank] || '';
-        html += `<td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;font-weight:600;color:var(--text-secondary)">${teamForPick}</td>`;
+        // Did this player's workout teams include the team predicted to draft them?
+        const woTeamMatch = !!(teamForPick && p.workoutTeams && p.workoutTeams.has(teamForPick));
+        const teamCellStyle = woTeamMatch
+          ? "font-family:'JetBrains Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--accent-gold)"
+          : "font-family:'JetBrains Mono',monospace;font-size:0.75rem;font-weight:600;color:var(--text-secondary)";
+        const teamCellTitle = woTeamMatch
+          ? ` title="${p.name} worked out for ${teamForPick} — workout boost applied to this pick"`
+          : '';
+        html += `<td${teamCellTitle} style="${teamCellStyle}">${teamForPick}</td>`;
         html += `<td class="player-cell">${p.name}</td>`;
         html += `<td>
           <div class="score-bar-container">
@@ -1034,6 +1091,21 @@
         const combineCell = (invited) => `<td data-sort="${invited ? 1 : 0}" style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.78rem">${invited ? '<span class="combine-tick">✓</span>' : '<span style="color:var(--text-muted)">—</span>'}</td>`;
         html += combineCell(p.combine && p.combine.dc);
         html += combineCell(p.combine && p.combine.gl);
+        // Pre-draft workouts cell. ★ when the predicted-pick team is in the
+        // workout set — that match got the +5% boost in the cascade.
+        const woArr = p.workoutTeamsArr || [];
+        const woCount = woArr.length;
+        if (woCount === 0) {
+          html += `<td data-sort="0" style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-muted)">—</td>`;
+        } else {
+          const woTitle = `Worked out for: ${woArr.join(', ')}`;
+          const woDisplay = woArr.join(', ');
+          if (woTeamMatch) {
+            html += `<td data-sort="${woCount}" title="${woTitle}" style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.7rem;font-weight:700;color:var(--accent-gold)">★ ${woDisplay}</td>`;
+          } else {
+            html += `<td data-sort="${woCount}" title="${woTitle}" style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.7rem">${woDisplay}</td>`;
+          }
+        }
         
         for (const src of sources) {
           const rank = p.ranks[src.name];

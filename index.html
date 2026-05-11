@@ -699,10 +699,51 @@
       }
 
       // Pre-draft workouts. WO PLAYER (col AQ) names the player; WO TEAM (col AR)
-      // is the team abbreviation they worked out for. Multiple rows can list
-      // the same player with different teams — each becomes a separate workout.
-      // Worked out for a team currently picking = +5% of total source weight
-      // added to that player's vote at the team's pick slot (see cascade below).
+      // is the team they worked out for. Multiple rows can list the same player
+      // with different teams — each becomes a separate workout. Worked out for
+      // a team currently picking = +5% of total source weight added to that
+      // player's vote at the team's pick slot (see cascade below).
+      //
+      // WO TEAM values in the sheet are typically full team names ("Memphis",
+      // "LA Clippers"); pickTeamMap values are 3-letter abbreviations ("MEM",
+      // "LAC"). Normalize WO TEAM → abbreviation before storing so the cascade
+      // .has() check matches reliably.
+      const TEAM_NAME_TO_ABBR = {
+        'ATL':'ATL','ATLANTA':'ATL','ATLANTA HAWKS':'ATL','HAWKS':'ATL',
+        'BOS':'BOS','BOSTON':'BOS','BOSTON CELTICS':'BOS','CELTICS':'BOS',
+        'BKN':'BKN','BROOKLYN':'BKN','BROOKLYN NETS':'BKN','NETS':'BKN',
+        'CHA':'CHA','CHARLOTTE':'CHA','CHARLOTTE HORNETS':'CHA','HORNETS':'CHA',
+        'CHI':'CHI','CHICAGO':'CHI','CHICAGO BULLS':'CHI','BULLS':'CHI',
+        'CLE':'CLE','CLEVELAND':'CLE','CLEVELAND CAVALIERS':'CLE','CAVALIERS':'CLE','CAVS':'CLE',
+        'DAL':'DAL','DALLAS':'DAL','DALLAS MAVERICKS':'DAL','MAVERICKS':'DAL','MAVS':'DAL',
+        'DEN':'DEN','DENVER':'DEN','DENVER NUGGETS':'DEN','NUGGETS':'DEN',
+        'DET':'DET','DETROIT':'DET','DETROIT PISTONS':'DET','PISTONS':'DET',
+        'GSW':'GSW','GOLDEN STATE':'GSW','GOLDEN STATE WARRIORS':'GSW','WARRIORS':'GSW',
+        'HOU':'HOU','HOUSTON':'HOU','HOUSTON ROCKETS':'HOU','ROCKETS':'HOU',
+        'IND':'IND','INDIANA':'IND','INDIANA PACERS':'IND','PACERS':'IND',
+        'LAC':'LAC','LA CLIPPERS':'LAC','LOS ANGELES CLIPPERS':'LAC','CLIPPERS':'LAC',
+        'LAL':'LAL','LA LAKERS':'LAL','LOS ANGELES LAKERS':'LAL','LAKERS':'LAL',
+        'MEM':'MEM','MEMPHIS':'MEM','MEMPHIS GRIZZLIES':'MEM','GRIZZLIES':'MEM',
+        'MIA':'MIA','MIAMI':'MIA','MIAMI HEAT':'MIA','HEAT':'MIA',
+        'MIL':'MIL','MILWAUKEE':'MIL','MILWAUKEE BUCKS':'MIL','BUCKS':'MIL',
+        'MIN':'MIN','MINNESOTA':'MIN','MINNESOTA TIMBERWOLVES':'MIN','TIMBERWOLVES':'MIN','WOLVES':'MIN',
+        'NOP':'NOP','NEW ORLEANS':'NOP','NEW ORLEANS PELICANS':'NOP','PELICANS':'NOP',
+        'NYK':'NYK','NEW YORK':'NYK','NEW YORK KNICKS':'NYK','KNICKS':'NYK','NY':'NYK',
+        'OKC':'OKC','OKLAHOMA CITY':'OKC','OKLAHOMA CITY THUNDER':'OKC','THUNDER':'OKC',
+        'ORL':'ORL','ORLANDO':'ORL','ORLANDO MAGIC':'ORL','MAGIC':'ORL',
+        'PHI':'PHI','PHILADELPHIA':'PHI','PHILADELPHIA 76ERS':'PHI','76ERS':'PHI','SIXERS':'PHI',
+        'PHX':'PHX','PHOENIX':'PHX','PHOENIX SUNS':'PHX','SUNS':'PHX',
+        'POR':'POR','PORTLAND':'POR','PORTLAND TRAIL BLAZERS':'POR','TRAIL BLAZERS':'POR','BLAZERS':'POR',
+        'SAC':'SAC','SACRAMENTO':'SAC','SACRAMENTO KINGS':'SAC','KINGS':'SAC',
+        'SAS':'SAS','SAN ANTONIO':'SAS','SAN ANTONIO SPURS':'SAS','SPURS':'SAS',
+        'TOR':'TOR','TORONTO':'TOR','TORONTO RAPTORS':'TOR','RAPTORS':'TOR',
+        'UTA':'UTA','UTAH':'UTA','UTAH JAZZ':'UTA','JAZZ':'UTA',
+        'WAS':'WAS','WASHINGTON':'WAS','WASHINGTON WIZARDS':'WAS','WIZARDS':'WAS',
+      };
+      const normalizeTeam = (raw) => {
+        const k = (raw || '').trim().toUpperCase();
+        return TEAM_NAME_TO_ABBR[k] || k; // fall through to raw if unknown
+      };
       const woPlayerIdx = header.findIndex(h => h.trim() === 'WO PLAYER');
       const woTeamIdx = header.findIndex(h => h.trim() === 'WO TEAM');
       const workoutsByPlayer = {}; // name -> Set of team abbrevs
@@ -710,7 +751,7 @@
         for (let i = 1; i < rows.length; i++) {
           const r = rows[i];
           const woPlayer = (r[woPlayerIdx] || '').trim();
-          const woTeam = (r[woTeamIdx] || '').trim().toUpperCase();
+          const woTeam = normalizeTeam(r[woTeamIdx]);
           if (woPlayer && woTeam) {
             if (!workoutsByPlayer[woPlayer]) workoutsByPlayer[woPlayer] = new Set();
             workoutsByPlayer[woPlayer].add(woTeam);
@@ -864,6 +905,10 @@
         sourceLists[src.name] = list;
       }
       
+      // Pick history: snapshot of vote state at each pick. Used to compute
+      // gap-to-pick for any player's workout teams below.
+      const pickHistory = [];
+
       for (let pick = 1; pick <= maxPicks; pick++) {
         if (available.size === 0) break;
         
@@ -877,18 +922,23 @@
           }
         }
         
-        // Workout boost: if the team picking at this slot has a candidate
-        // who worked out for them, add 5% of total source weight to that
-        // candidate's vote. Tracked separately so the UI can flag the row.
+        // Workout boost: any AVAILABLE player who worked out for the team
+        // picking at this slot gets +5% of total source weight added to
+        // their vote. Critically, this includes players with zero
+        // source-votes at this pick — a workout alone is enough to put
+        // someone in contention (worth roughly 5% probability).
+        // An earlier implementation only boosted players already getting
+        // source votes, which silently zeroed out the workout signal for
+        // anyone projected later than their workout team's pick.
         const teamPicking = pickTeamMap[pick];
-        const workoutBoostBy = {}; // candidateName -> true if boosted at this pick
+        const workoutBoostBy = {};
         if (teamPicking) {
           const boost = totalSourceWeight * 0.05;
-          for (const candName of Object.keys(votes)) {
-            const player = players.find(p => p.name === candName);
-            if (player && player.workoutTeams && player.workoutTeams.has(teamPicking)) {
-              votes[candName] += boost;
-              workoutBoostBy[candName] = true;
+          for (const p of players) {
+            if (!available.has(p.name)) continue;
+            if (p.workoutTeams && p.workoutTeams.has(teamPicking)) {
+              votes[p.name] = (votes[p.name] || 0) + boost;
+              workoutBoostBy[p.name] = true;
             }
           }
         }
@@ -896,7 +946,7 @@
         // Sort candidates by votes. Cap pct at 100 so a workout-boosted
         // player who already had ~100% doesn't display as 105%.
         const candidates = Object.entries(votes)
-          .map(([name, weight]) => ({ name, pct: Math.min(100, Math.round((weight / totalSourceWeight) * 100)) }))
+          .map(([name, weight]) => ({ name, weight, pct: Math.min(100, Math.round((weight / totalSourceWeight) * 100)) }))
           .sort((a, b) => b.pct - a.pct);
         
         if (candidates.length === 0) break;
@@ -911,8 +961,49 @@
         // total at the team's pick slot (whether or not it changed the
         // outcome — a player who would've won anyway still got the bonus).
         player.workoutBoostApplied = !!workoutBoostBy[winner.name];
+
+        // Record this pick's state so we can compute gap-to-pick for any
+        // player's workout teams. votes is the post-boost weight map.
+        pickHistory.push({
+          pick,
+          team: teamPicking,
+          winnerName: winner.name,
+          winnerWeight: winner.weight,
+          winnerPct: winner.pct,
+          votes: { ...votes },
+        });
         drafted.push(player);
         available.delete(winner.name);
+      }
+
+      // For each player with workouts, find their gap-to-pick across all
+      // their workout teams. Useful for "how close was X to being picked by
+      // Y?" — surfaces in the WO column tooltip. Records weight + percentage
+      // points behind the winner at each of their workout teams' pick slots.
+      for (const p of players) {
+        if (!p.workoutTeams || p.workoutTeams.size === 0) continue;
+        const gaps = [];
+        for (const woTeam of p.workoutTeamsArr) {
+          const teamPicks = pickHistory.filter(h => h.team === woTeam);
+          for (const ph of teamPicks) {
+            // Only meaningful if player was still available at that pick.
+            if (p.finalRank <= ph.pick) continue;
+            const playerWeight = ph.votes[p.name] || 0;
+            const gap = ph.winnerWeight - playerWeight;
+            const gapPct = Math.round((gap / totalSourceWeight) * 100 * 10) / 10;
+            gaps.push({
+              team: woTeam,
+              pick: ph.pick,
+              winner: ph.winnerName,
+              winnerPct: ph.winnerPct,
+              playerWeight: Math.round(playerWeight * 10) / 10,
+              gap: Math.round(gap * 10) / 10,
+              gapPct,
+            });
+          }
+        }
+        gaps.sort((a, b) => a.gap - b.gap);
+        p.workoutGaps = gaps;
       }
       
       // Add undrafted players after pick 60
@@ -1092,18 +1183,33 @@
         html += combineCell(p.combine && p.combine.dc);
         html += combineCell(p.combine && p.combine.gl);
         // Pre-draft workouts cell. ★ when the predicted-pick team is in the
-        // workout set — that match got the +5% boost in the cascade.
+        // workout set — that match got the +5% boost in the cascade. Tooltip
+        // shows gap-to-pick for each workout team (how close the player came
+        // to being picked by them).
         const woArr = p.workoutTeamsArr || [];
         const woCount = woArr.length;
         if (woCount === 0) {
           html += `<td data-sort="0" style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-muted)">—</td>`;
         } else {
-          const woTitle = `Worked out for: ${woArr.join(', ')}`;
+          let woTitle = `Worked out for: ${woArr.join(', ')}`;
+          if (p.workoutGaps && p.workoutGaps.length > 0) {
+            const gapLines = p.workoutGaps.map(g => {
+              const ahead = g.gap < 0;
+              const sign = ahead ? 'AHEAD of' : 'behind';
+              const absGap = Math.abs(g.gap).toFixed(1);
+              const absPct = Math.abs(g.gapPct).toFixed(1);
+              return `  • ${g.team} (pick #${g.pick}): ${absGap} pts (${absPct}%) ${sign} winner ${g.winner} (${g.winnerPct}%)`;
+            });
+            woTitle += `\n\nClosest workout-team matches (sorted by gap):\n${gapLines.join('\n')}`;
+          } else if (woCount > 0) {
+            woTitle += `\n\n(Drafted before any workout team's pick — no gap to compute.)`;
+          }
           const woDisplay = woArr.join(', ');
+          const safeTitle = woTitle.replace(/"/g, '&quot;');
           if (woTeamMatch) {
-            html += `<td data-sort="${woCount}" title="${woTitle}" style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.7rem;font-weight:700;color:var(--accent-gold)">★ ${woDisplay}</td>`;
+            html += `<td data-sort="${woCount}" title="${safeTitle}" style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.7rem;font-weight:700;color:var(--accent-gold)">★ ${woDisplay}</td>`;
           } else {
-            html += `<td data-sort="${woCount}" title="${woTitle}" style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.7rem">${woDisplay}</td>`;
+            html += `<td data-sort="${woCount}" title="${safeTitle}" style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.7rem">${woDisplay}</td>`;
           }
         }
         

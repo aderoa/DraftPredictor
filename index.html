@@ -201,7 +201,7 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif!important
     <footer>Aggregate rankings powered by <a href="https://hoopsmatic.com" target="_blank">HoopsMatic</a></footer>
   </div>
   <script>
-    // DEPLOY-FP: 2026-05-11-v3-workouts-column-active
+    // DEPLOY-FP: 2026-05-11-v4-workout-boost-25pct
     const SOURCE_WEIGHTS = {
       'AGG RANK': 10, 'ESPN': 10, 'Athletic': 7, 'Bleacher': 6, 'Babcock': 6,
       'NBADraft': 3, 'CBS Sports': 3, 'No Ceilings': 2, 'The Ringer': 2,
@@ -447,7 +447,7 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif!important
         const teamPicking = pickTeamMap[pick];
         const workoutBoostBy = {};
         if (teamPicking) {
-          const boost = totalSourceWeight * 0.05;
+          const boost = totalSourceWeight * 0.25;
           for (const p of players) {
             if (!available.has(p.name)) continue;
             if (p.workoutTeams && p.workoutTeams.has(teamPicking)) {

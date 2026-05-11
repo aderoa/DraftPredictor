@@ -1284,15 +1284,20 @@
       const wrapper = document.getElementById('tableWrapper');
       wrapper.innerHTML = html;
       wrapper.style.display = 'block';
-      // Once the table is rendered, reveal the (intentionally undescriptive)
-      // editorial corner dot used to copy Presto-pasteable HTML. Kept hidden
-      // until data is ready so the dot doesn't appear during loading.
+      // Stash the rendered player list + pickTeamMap on a global so the
+      // Presto generator can read them later without re-running compute.
+      // The data is always stashed so the editorial dot works the moment
+      // it's revealed.
+      window.__draftPredictorLatest = { players, pickTeamMap };
+      // The editorial corner dot (Copy Presto Code) is hidden by default and
+      // only surfaces when the URL has `?ed=1`. Keeps the feature out of view
+      // for the general public; editors bookmark the gated URL.
       const cpBtn = document.getElementById('btnCopyPresto');
       if (cpBtn) {
-        cpBtn.style.display = 'block';
-        // Stash the rendered player list + pickTeamMap on a global so the
-        // Presto generator can read them later without re-running compute.
-        window.__draftPredictorLatest = { players, pickTeamMap };
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('ed') === '1') {
+          cpBtn.style.display = 'block';
+        }
       }
       
       // Sortable columns

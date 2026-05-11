@@ -132,12 +132,13 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif!important
     footer a:hover { text-decoration: underline; }
     .undrafted-board { margin-top: 3rem; }
     #btnCopyPresto {
-      position: fixed; bottom: 14px; right: 14px;
-      width: 14px; height: 14px; border-radius: 50%;
-      background: rgba(0,0,0,0.08); cursor: pointer; z-index: 50;
-      transition: background 0.2s, transform 0.15s, opacity 0.2s; opacity: 0.45;
+      position: fixed; bottom: 16px; right: 16px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: rgba(0,0,0,0.28); cursor: pointer; z-index: 50;
+      transition: background 0.2s, transform 0.15s; opacity: 1;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
     }
-    #btnCopyPresto:hover { background: rgba(0,0,0,0.32); opacity: 1; transform: scale(1.2); }
+    #btnCopyPresto:hover { background: rgba(0,0,0,0.55); transform: scale(1.2); }
     #btnCopyPresto.copied { background: var(--accent-green); opacity: 1; }
     #btnCopyPresto.failed { background: var(--accent-red, #b91c1c); opacity: 1; }
     .undrafted-header { margin-bottom: 1.5rem; }
@@ -684,6 +685,26 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif!important
   // =================================================================
   var _HM_ISO={'United States':'US','France':'FR','Australia':'AU','Canada':'CA','Spain':'ES','Germany':'DE','Serbia':'RS','Greece':'GR','Italy':'IT','Nigerian':'NG','Nigeria':'NG','Croatia':'HR','Lithuania':'LT','Bahamas':'BS','Benin':'BJ','DR Congo':'CD','Dominican Republic':'DO','Estonia':'EE','Finland':'FI','Israel':'IL','Mexico':'MX','Senegal':'SN','Brazil':'BR','Cameroon':'CM','Japan':'JP','South Sudan':'SS','New Zealand':'NZ','Montenegro':'ME','Turkey':'TR','UK':'GB','United Kingdom':'GB','Belgium':'BE','Ivory Coast':'CI','Slovenia':'SI','Latvia':'LV','Jamaica':'JM','Angola':'AO','Mali':'ML','Poland':'PL','China':'CN','Philippines':'PH','Czech Republic':'CZ','Czechia':'CZ','Austria':'AT','Bosnia':'BA','Bosnia and Herzegovina':'BA','Georgia':'GE','Sweden':'SE','Switzerland':'CH','Argentina':'AR','Colombia':'CO','Puerto Rico':'PR','Haiti':'HT','Egypt':'EG','Ukraine':'UA','Russia':'RU','South Korea':'KR','Taiwan':'TW','Denmark':'DK','Norway':'NO','Romania':'RO','Hungary':'HU','Portugal':'PT','Ireland':'IE','Netherlands':'NL','South Africa':'ZA','Ghana':'GH','Congo':'CG','Guinea':'GN','Gabon':'GA','Morocco':'MA','Tunisia':'TN','Algeria':'DZ','Kenya':'KE','India':'IN','Iran':'IR','Lebanon':'LB','Trinidad and Tobago':'TT','US Virgin Islands':'VI','Barbados':'BB','US':'US'};
   function _hmFlag(c){var code=_HM_ISO[c];if(!code)return'';return'<img src="https://flagcdn.com/w40/'+code.toLowerCase()+'.png" width="20" height="15" style="vertical-align:middle;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,0.08)" alt="'+code+'">';}
+  function _hmWoCell(p, teamForPick) {
+    if (!p.workoutTeamsArr || !p.workoutTeamsArr.length) {
+      return '<td style="text-align:center;color:#8892a6">—</td>';
+    }
+    var arr = p.workoutTeamsArr;
+    var matched = !!(teamForPick && p.workoutTeams && p.workoutTeams.has(teamForPick));
+    var title = 'Worked out for: ' + arr.join(', ');
+    if (p.workoutGaps && p.workoutGaps.length) {
+      var lines = p.workoutGaps.slice(0, 8).map(function(g) {
+        var sign = g.gap < 0 ? 'AHEAD of' : 'behind';
+        var absPct = Math.abs(g.gapPct).toFixed(1);
+        return '• ' + g.team + ' #' + g.pick + ': ' + absPct + 'pp ' + sign + ' ' + g.winner + ' (' + g.winnerPct + '%)';
+      });
+      title += '\n\nGap analysis (closest first):\n' + lines.join('\n');
+    }
+    var safe = title.replace(/"/g, '&quot;');
+    var prefix = matched ? '★ ' : '';
+    var styleColor = matched ? 'color:#b45309;font-weight:700' : 'color:#5a6070';
+    return '<td title="' + safe + '" style="text-align:left;font-family:\'JetBrains Mono\',monospace;font-size:0.7rem;cursor:help;' + styleColor + '">' + prefix + arr.join(', ') + '</td>';
+  }
   var _hmBioLookup={}, _hmSheetOrder=[];
   var _origRender=render;
   render=function(data){
@@ -691,11 +712,11 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif!important
     if(!players.length){document.getElementById('error').textContent='No draft data found.';document.getElementById('error').style.display='block';return;}
     document.getElementById('statsBar').style.display='none';
     var wb=document.getElementById('weightsBar');if(wb)wb.style.display='none';
-    var html='<table><thead><tr><th class="col-rank" data-col="finalRank" data-type="num">Pick</th><th data-col="team" data-type="str">Team</th><th></th><th class="col-player" data-col="name" data-type="str" style="text-align:left">Player</th><th>Pos</th><th style="text-align:left">School</th><th style="text-align:left">Age</th><th title="NBA Draft Combine">Combine</th><th title="G League Combine">G League</th></tr></thead><tbody>';
+    var html='<table><thead><tr><th class="col-rank" data-col="finalRank" data-type="num">Pick</th><th data-col="team" data-type="str">Team</th><th></th><th class="col-player" data-col="name" data-type="str" style="text-align:left">Player</th><th>Pos</th><th style="text-align:left">School</th><th style="text-align:left">Age</th><th title="NBA Draft Combine">Combine</th><th title="G League Combine">G League</th><th title="Pre-draft workouts. Hover for gap-to-pick analysis. ★ = worked out for the team predicted to draft them.">Workouts</th></tr></thead><tbody>';
     players.forEach(function(p){if(!p.finalRank||p.finalRank>60)return;var bio=_hmBioLookup[p.name]||{};var flag=_hmFlag(bio.country)||'';var tier=p.finalRank<=5?'top5':p.finalRank<=10?'top10':p.finalRank<=14?'lottery':p.finalRank<=20?'top20':p.finalRank<=30?'first-round':'second-round';var tierRow='tier-'+(p.finalRank<=5?'5':p.finalRank<=10?'10':p.finalRank<=14?'lottery':p.finalRank<=20?'20':p.finalRank<=30?'first':'second');var teamForPick=pickTeamMap[p.finalRank]||'';
     var dc=bio.dc?'<span style="color:#16a34a;font-weight:700">✓</span>':'';
     var gl=bio.gl?'<span style="color:#16a34a;font-weight:700">✓</span>':'';
-    html+='<tr class="'+tierRow+'"><td class="rank-cell '+tier+'">'+p.finalRank+'</td><td style="font-family:\'JetBrains Mono\',monospace;font-size:0.75rem;font-weight:600;color:var(--text-secondary)">'+teamForPick+'</td><td style="text-align:center;padding:0.3rem 0.15rem;width:28px">'+flag+'</td><td style="text-align:left;padding-right:0.25rem"><span class="player-name">'+p.name+'</span></td><td style="font-family:\'JetBrains Mono\',monospace;font-size:0.72rem;color:var(--text-secondary);padding:0.4rem 0.5rem">'+(bio.position||'')+'</td><td style="font-size:0.8rem;color:var(--text-secondary);text-align:left">'+(bio.college||'')+'</td><td style="font-family:\'JetBrains Mono\',monospace;font-size:0.72rem;color:var(--text-muted);text-align:left;white-space:nowrap">'+(bio.ageText||'')+'</td><td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:0.78rem">'+dc+'</td><td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:0.78rem">'+gl+'</td></tr>';});
+    html+='<tr class="'+tierRow+'"><td class="rank-cell '+tier+'">'+p.finalRank+'</td><td style="font-family:\'JetBrains Mono\',monospace;font-size:0.75rem;font-weight:600;color:var(--text-secondary)">'+teamForPick+'</td><td style="text-align:center;padding:0.3rem 0.15rem;width:28px">'+flag+'</td><td style="text-align:left;padding-right:0.25rem"><span class="player-name">'+p.name+'</span></td><td style="font-family:\'JetBrains Mono\',monospace;font-size:0.72rem;color:var(--text-secondary);padding:0.4rem 0.5rem">'+(bio.position||'')+'</td><td style="font-size:0.8rem;color:var(--text-secondary);text-align:left">'+(bio.college||'')+'</td><td style="font-family:\'JetBrains Mono\',monospace;font-size:0.72rem;color:var(--text-muted);text-align:left;white-space:nowrap">'+(bio.ageText||'')+'</td><td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:0.78rem">'+dc+'</td><td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:0.78rem">'+gl+'</td>'+_hmWoCell(p,teamForPick)+'</tr>';});
     html+='</tbody></table>';document.getElementById('tableWrapper').innerHTML=html;document.getElementById('tableWrapper').style.display='block';
     var undraftedNames=new Set();players.forEach(function(p){if(availableSet.has(p.name))undraftedNames.add(p.name);});if(undraftedNames.size===0)return;
     var ordered=[];_hmSheetOrder.forEach(function(name){if(undraftedNames.has(name)){ordered.push(name);undraftedNames.delete(name);}});undraftedNames.forEach(function(name){ordered.push(name);});

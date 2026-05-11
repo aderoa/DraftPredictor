@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NBA Draft Predictor — Aggregated Mock Draft</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+:root{--bg-primary:#f8f9fa!important;--bg-card:#fff!important;--bg-row-alt:#fafbfc!important;--bg-hover:rgba(59,130,246,0.03)!important;--border:#e2e5e9!important;--text-primary:#1a1a2e!important;--text-secondary:#5a6070!important;--text-muted:#8892a6!important;--accent-gold:#3b82f6!important;--accent-green:#16a34a!important;--accent-blue:#3b82f6!important;--accent-red:#dc2626!important;--accent-purple:#8b5cf6!important;--top5:#f59e0b!important;--top10:#3b82f6!important;--top20:#16a34a!important;--lottery:#8b5cf6!important;--first-round:#8892a6!important;--second-round:#8892a6!important;}
+body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif!important;background:var(--bg-primary)!important;color:var(--text-primary)!important;}body::before{display:none!important;}h1{font-size:1.5rem!important;font-weight:800!important;color:var(--text-primary)!important;letter-spacing:-0.02em!important;}h1 span{color:var(--accent-blue)!important;}header{justify-content:flex-start!important;}.header-tag{color:var(--accent-blue)!important;background:rgba(59,130,246,0.07)!important;border-color:rgba(59,130,246,0.15)!important;font-family:'JetBrains Mono',monospace!important;}.subtitle{color:var(--text-secondary)!important;}.stat-item{background:var(--bg-card)!important;border:1px solid var(--border)!important;border-radius:10px!important;}.stat-value{color:var(--accent-blue)!important;}.stat-label{color:var(--text-muted)!important;}.weights-bar{background:var(--bg-card)!important;border:1px solid var(--border)!important;}.table-wrapper{background:var(--bg-card)!important;border:1px solid var(--border)!important;border-radius:10px!important;}thead th{background:#f3f4f6!important;border-bottom:1px solid var(--border)!important;color:var(--text-muted)!important;font-family:'JetBrains Mono',monospace!important;}tbody tr{border-bottom:1px solid var(--border)!important;}tbody tr:hover{background:rgba(59,130,246,0.03)!important;}tbody tr:nth-child(even){background:var(--bg-row-alt)!important;}.player-name{color:var(--text-primary)!important;font-weight:600!important;font-size:0.85rem!important;}.undrafted-board{background:var(--bg-card)!important;border:1px solid var(--border)!important;border-radius:10px!important;}.undrafted-grid.table-wrapper{display:block!important;}.stats-bar{display:none!important;}.container{max-width:1400px!important;padding:1.5rem 2rem!important;}table{table-layout:auto!important;width:100%!important;}th.col-rank{width:42px!important;}.table-wrapper{overflow-x:visible!important;}.loading-spinner{border-color:var(--border)!important;border-top-color:var(--accent-blue)!important;}.loading-text{color:var(--text-secondary)!important;}footer{color:var(--text-muted)!important;}footer a{color:var(--accent-blue)!important;}
+
     :root {
       --bg-primary: #0a0e1a;
       --bg-card: #111827;
@@ -37,7 +41,6 @@
       min-height: 100vh;
     }
     
-    /* Subtle grid pattern background */
     body::before {
       content: '';
       position: fixed;
@@ -50,253 +53,58 @@
       z-index: 0;
     }
     
-    .container {
-      max-width: 1500px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem;
-      position: relative;
-      z-index: 1;
-    }
-    
-    /* Header */
-    header {
-      margin-bottom: 2.5rem;
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 2rem;
-      flex-wrap: wrap;
-    }
-    
+    .container { max-width: 1500px; margin: 0 auto; padding: 2rem 1.5rem; position: relative; z-index: 1; }
+    header { margin-bottom: 2.5rem; display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; flex-wrap: wrap; }
     .header-left { flex: 1; }
-    
-    .header-tag {
-      display: inline-block;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--accent-gold);
-      background: rgba(245, 158, 11, 0.1);
-      border: 1px solid rgba(245, 158, 11, 0.25);
-      padding: 0.3rem 0.75rem;
-      border-radius: 4px;
-      margin-bottom: 0.75rem;
-    }
-    
-    h1 {
-      font-size: 2.75rem;
-      font-weight: 900;
-      letter-spacing: -1px;
-      line-height: 1.1;
-      color: white;
-    }
-    
-    h1 span {
-      color: var(--accent-gold);
-    }
-    
-    .subtitle {
-      color: var(--text-secondary);
-      font-size: 1rem;
-      font-weight: 400;
-      margin-top: 0.5rem;
-    }
-    
-    /* Stats bar */
-    .stats-bar {
-      display: flex;
-      gap: 1.5rem;
-      flex-wrap: wrap;
-    }
-    
-    .stat-item {
-      text-align: center;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 0.75rem 1.25rem;
-      min-width: 100px;
-    }
-    
-    .stat-value {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--accent-blue);
-    }
-    
-    .stat-label {
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: var(--text-muted);
-      margin-top: 0.15rem;
-    }
-    
-    /* Weights legend */
-    .weights-bar {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      margin-bottom: 1.5rem;
-      padding: 1rem 1.25rem;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-    }
-    
-    .weights-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.7rem;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-right: 0.5rem;
-    }
-    
-    .weight-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      font-size: 0.75rem;
-      padding: 0.25rem 0.6rem;
-      border-radius: 6px;
-      background: rgba(59, 130, 246, 0.1);
-      border: 1px solid rgba(59, 130, 246, 0.2);
-      color: var(--text-secondary);
-    }
-    
-    .weight-chip .w {
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 700;
-      color: var(--accent-blue);
-      font-size: 0.7rem;
-    }
-    
-    /* Table */
-    .table-wrapper {
-      overflow-x: auto;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: var(--bg-card);
-    }
-    
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.85rem;
-    }
-    
-    thead th {
-      position: sticky;
-      top: 0;
-      background: #0f172a;
-      border-bottom: 2px solid var(--accent-gold);
-      padding: 0.75rem 0.6rem;
-      text-align: center;
-      font-weight: 700;
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--text-secondary);
-      white-space: nowrap;
-      cursor: pointer;
-      user-select: none;
-      transition: color 0.15s;
-      z-index: 10;
-    }
-    
+    .header-tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--accent-gold); background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); padding: 0.3rem 0.75rem; border-radius: 4px; margin-bottom: 0.75rem; }
+    h1 { font-size: 2.75rem; font-weight: 900; letter-spacing: -1px; line-height: 1.1; color: white; }
+    h1 span { color: var(--accent-gold); }
+    .subtitle { color: var(--text-secondary); font-size: 1rem; font-weight: 400; margin-top: 0.5rem; }
+    .stats-bar { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .stat-item { text-align: center; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 1.25rem; min-width: 100px; }
+    .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--accent-blue); }
+    .stat-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); margin-top: 0.15rem; }
+    .weights-bar { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; padding: 1rem 1.25rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; }
+    .weights-label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-right: 0.5rem; }
+    .weight-chip { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 6px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); color: var(--text-secondary); }
+    .weight-chip .w { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--accent-blue); font-size: 0.7rem; }
+    .table-wrapper { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-card); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    thead th { position: sticky; top: 0; background: #0f172a; border-bottom: 2px solid var(--accent-gold); padding: 0.75rem 0.6rem; text-align: center; font-weight: 700; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); white-space: nowrap; cursor: pointer; user-select: none; transition: color 0.15s; z-index: 10; }
     thead th:hover { color: var(--accent-gold); }
-    
     thead th.sorted-asc::after { content: ' ▲'; color: var(--accent-gold); }
     thead th.sorted-desc::after { content: ' ▼'; color: var(--accent-gold); }
-    
     th.col-rank { width: 50px; }
     th.col-player { text-align: left; min-width: 180px; }
     th.col-score { width: 80px; }
     th.col-sources { width: 50px; }
-    
-    tbody tr {
-      border-bottom: 1px solid rgba(30, 41, 59, 0.5);
-      transition: background 0.1s;
-    }
-    
+    tbody tr { border-bottom: 1px solid rgba(30, 41, 59, 0.5); transition: background 0.1s; }
     tbody tr:nth-child(even) { background: var(--bg-row-alt); }
     tbody tr:hover { background: var(--bg-hover); }
-    
-    /* Tier separator rows */
     tbody tr.tier-5 td:first-child { border-left: 3px solid var(--top5); }
     tbody tr.tier-10 td:first-child { border-left: 3px solid var(--top10); }
     tbody tr.tier-20 td:first-child { border-left: 3px solid var(--top20); }
     tbody tr.tier-lottery td:first-child { border-left: 3px solid var(--lottery); }
     tbody tr.tier-first td:first-child { border-left: 3px solid var(--first-round); }
     tbody tr.tier-second td:first-child { border-left: 3px solid var(--second-round); }
-    
-    td {
-      padding: 0.6rem;
-      text-align: center;
-      vertical-align: middle;
-    }
-    
-    /* Rank column */
-    .rank-cell {
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 800;
-      font-size: 1rem;
-    }
-    
+    td { padding: 0.6rem; text-align: center; vertical-align: middle; }
+    .rank-cell { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 1rem; }
     .rank-cell.top5 { color: var(--top5); }
     .rank-cell.top10 { color: var(--top10); }
     .rank-cell.top20 { color: var(--top20); }
     .rank-cell.lottery { color: var(--lottery); }
     .rank-cell.first-round { color: var(--first-round); }
     .rank-cell.second-round { color: var(--second-round); }
-    
-    /* Player name */
-    .player-cell {
-      text-align: left;
-      font-weight: 600;
-      font-size: 0.9rem;
-      color: white;
-    }
-    
-    /* Score */
-    .score-cell {
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 700;
-      font-size: 0.9rem;
-    }
-    
+    .player-cell { text-align: left; font-weight: 600; font-size: 0.9rem; color: white; }
+    .score-cell { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.9rem; }
     .score-cell.elite { color: var(--accent-gold); }
     .score-cell.high { color: var(--accent-green); }
     .score-cell.mid { color: var(--accent-blue); }
     .score-cell.low { color: var(--text-muted); }
-    
-    /* Source count */
-    .sources-cell {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.8rem;
-    }
-    
-    .sources-cell .count {
-      font-weight: 700;
-      color: var(--accent-green);
-    }
-    
-    .sources-cell .total {
-      color: var(--text-muted);
-    }
-    
-    /* Mock draft rank cells */
-    .mock-rank {
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 500;
-      font-size: 0.8rem;
-    }
-    
+    .sources-cell { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
+    .sources-cell .count { font-weight: 700; color: var(--accent-green); }
+    .sources-cell .total { color: var(--text-muted); }
+    .mock-rank { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 0.8rem; }
     .mock-rank.top5-pick { color: var(--top5); font-weight: 700; }
     .mock-rank.top10-pick { color: var(--top10); font-weight: 600; }
     .mock-rank.top20-pick { color: var(--accent-green); }
@@ -304,268 +112,54 @@
     .mock-rank.first-pick { color: var(--text-secondary); }
     .mock-rank.second-pick { color: var(--text-muted); }
     .mock-rank.unranked { color: rgba(100, 116, 139, 0.3); }
-    
-    /* Consensus bar */
-    .consensus-cell {
-      padding: 0.6rem 0.4rem;
-    }
-    
-    .consensus-bar-bg {
-      width: 100%;
-      height: 6px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-    
-    .consensus-bar-fill {
-      height: 100%;
-      border-radius: 3px;
-      transition: width 0.3s ease;
-    }
-    
+    .consensus-cell { padding: 0.6rem 0.4rem; }
+    .consensus-bar-bg { width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
+    .consensus-bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s ease; }
     .consensus-bar-fill.tight { background: var(--accent-green); }
     .consensus-bar-fill.moderate { background: var(--accent-blue); }
     .consensus-bar-fill.wide { background: var(--accent-gold); }
     .consensus-bar-fill.split { background: var(--accent-red); }
-    
-    /* Score bar */
-    .score-bar-container {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    
-    .score-bar-bg {
-      flex: 1;
-      height: 4px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 2px;
-      overflow: hidden;
-    }
-    
-    .score-bar-fill {
-      height: 100%;
-      border-radius: 2px;
-      background: linear-gradient(90deg, var(--accent-blue), var(--accent-gold));
-    }
-    
-    /* Loading */
-    .loading {
-      text-align: center;
-      padding: 6rem 2rem;
-    }
-    
-    .loading-spinner {
-      width: 48px;
-      height: 48px;
-      border: 3px solid var(--border);
-      border-top-color: var(--accent-gold);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto 1.5rem;
-    }
-    
+    .score-bar-container { display: flex; align-items: center; gap: 0.5rem; }
+    .score-bar-bg { flex: 1; height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden; }
+    .score-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent-blue), var(--accent-gold)); }
+    .loading { text-align: center; padding: 6rem 2rem; }
+    .loading-spinner { width: 48px; height: 48px; border: 3px solid var(--border); border-top-color: var(--accent-gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1.5rem; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    
-    .loading-text {
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--text-muted);
-      font-size: 0.85rem;
-      letter-spacing: 1px;
-    }
-    
-    .error {
-      text-align: center;
-      padding: 3rem;
-      color: var(--accent-red);
-      font-family: 'JetBrains Mono', monospace;
-    }
-    
-    /* Footer */
-    footer {
-      text-align: center;
-      margin-top: 2.5rem;
-      padding: 1.5rem;
-      color: var(--text-muted);
-      font-size: 0.8rem;
-      border-top: 1px solid var(--border);
-    }
-    
-    footer a {
-      color: var(--accent-gold);
-      text-decoration: none;
-    }
-    
+    .loading-text { font-family: 'JetBrains Mono', monospace; color: var(--text-muted); font-size: 0.85rem; letter-spacing: 1px; }
+    .error { text-align: center; padding: 3rem; color: var(--accent-red); font-family: 'JetBrains Mono', monospace; }
+    footer { text-align: center; margin-top: 2.5rem; padding: 1.5rem; color: var(--text-muted); font-size: 0.8rem; border-top: 1px solid var(--border); }
+    footer a { color: var(--accent-gold); text-decoration: none; }
     footer a:hover { text-decoration: underline; }
-    
-    /* ===== UNDRAFTED WATCHLIST ===== */
-    .undrafted-board {
-      margin-top: 3rem;
-    }
-    
+    .undrafted-board { margin-top: 3rem; }
     #btnCopyPresto {
-      position: fixed;
-      bottom: 14px;
-      right: 14px;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: rgba(0,0,0,0.08);
-      cursor: pointer;
-      z-index: 50;
-      transition: background 0.2s, transform 0.15s, opacity 0.2s;
-      opacity: 0.45;
+      position: fixed; bottom: 14px; right: 14px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: rgba(0,0,0,0.08); cursor: pointer; z-index: 50;
+      transition: background 0.2s, transform 0.15s, opacity 0.2s; opacity: 0.45;
     }
-    #btnCopyPresto:hover {
-      background: rgba(0,0,0,0.32);
-      opacity: 1;
-      transform: scale(1.2);
-    }
-    #btnCopyPresto.copied {
-      background: var(--accent-green);
-      opacity: 1;
-    }
-    #btnCopyPresto.failed {
-      background: var(--accent-red, #b91c1c);
-      opacity: 1;
-    }
-    
-    .undrafted-header {
-      margin-bottom: 1.5rem;
-    }
-    
-    .undrafted-header h2 {
-      font-size: 1.75rem;
-      font-weight: 800;
-      color: white;
-    }
-    
-    .undrafted-header h2 span {
-      color: var(--accent-red);
-    }
-    
-    .undrafted-subtitle {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      margin-top: 0.25rem;
-    }
-    
-    .undrafted-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 0.75rem;
-    }
-    
-    .undrafted-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1rem 1.25rem;
-      transition: border-color 0.15s, transform 0.15s;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    
-    .undrafted-card:hover {
-      border-color: rgba(239, 68, 68, 0.3);
-      transform: translateY(-2px);
-    }
-    
-    .undrafted-card-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.75rem;
-    }
-    
-    .undrafted-rank {
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 800;
-      font-size: 0.8rem;
-      color: var(--accent-red);
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.2);
-      padding: 0.15rem 0.5rem;
-      border-radius: 4px;
-      white-space: nowrap;
-    }
-    
-    .undrafted-name {
-      font-weight: 700;
-      font-size: 1rem;
-      color: white;
-      flex: 1;
-    }
-    
-    .undrafted-score {
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 700;
-      font-size: 0.85rem;
-      color: var(--accent-blue);
-    }
-    
-    .undrafted-sources {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.35rem;
-    }
-    
-    .undrafted-source-chip {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.65rem;
-      padding: 0.15rem 0.45rem;
-      border-radius: 4px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border);
-      color: var(--text-secondary);
-    }
-    
-    .undrafted-source-chip .src-rank {
-      font-weight: 700;
-      color: var(--accent-gold);
-    }
-    
-    .undrafted-bar-row {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    
-    .undrafted-bar-label {
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--text-muted);
-      min-width: 50px;
-    }
-    
-    .undrafted-bar-bg {
-      flex: 1;
-      height: 6px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-    
-    .undrafted-bar-fill {
-      height: 100%;
-      border-radius: 3px;
-      background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
-    }
-    
-    /* Stagger animation */
-    @keyframes fadeSlideIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    tbody tr {
-      animation: fadeSlideIn 0.3s ease both;
-    }
-    
-    /* Responsive */
+    #btnCopyPresto:hover { background: rgba(0,0,0,0.32); opacity: 1; transform: scale(1.2); }
+    #btnCopyPresto.copied { background: var(--accent-green); opacity: 1; }
+    #btnCopyPresto.failed { background: var(--accent-red, #b91c1c); opacity: 1; }
+    .undrafted-header { margin-bottom: 1.5rem; }
+    .undrafted-header h2 { font-size: 1.75rem; font-weight: 800; color: white; }
+    .undrafted-header h2 span { color: var(--accent-red); }
+    .undrafted-subtitle { color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem; }
+    .undrafted-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0.75rem; }
+    .undrafted-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; transition: border-color 0.15s, transform 0.15s; display: flex; flex-direction: column; gap: 0.5rem; }
+    .undrafted-card:hover { border-color: rgba(239, 68, 68, 0.3); transform: translateY(-2px); }
+    .undrafted-card-top { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+    .undrafted-rank { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 0.8rem; color: var(--accent-red); background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 0.15rem 0.5rem; border-radius: 4px; white-space: nowrap; }
+    .undrafted-name { font-weight: 700; font-size: 1rem; color: white; flex: 1; }
+    .undrafted-score { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.85rem; color: var(--accent-blue); }
+    .undrafted-sources { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .undrafted-source-chip { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; padding: 0.15rem 0.45rem; border-radius: 4px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-secondary); }
+    .undrafted-source-chip .src-rank { font-weight: 700; color: var(--accent-gold); }
+    .undrafted-bar-row { display: flex; align-items: center; gap: 0.5rem; }
+    .undrafted-bar-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); min-width: 50px; }
+    .undrafted-bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
+    .undrafted-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); }
+    @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    tbody tr { animation: fadeSlideIn 0.3s ease both; }
     @media (max-width: 768px) {
       h1 { font-size: 1.75rem; }
       header { flex-direction: column; align-items: flex-start; }
@@ -575,34 +169,77 @@
       table { font-size: 0.75rem; }
       td, th { padding: 0.4rem 0.35rem; }
     }
-    /* Combine invitation tick (Draft Combine + G League Combine columns) */
-    .combine-tick {
-      color: var(--accent-green);
-      font-weight: 700;
-      font-size: 0.95rem;
-    }
+    .combine-tick { color: var(--accent-green); font-weight: 700; font-size: 0.95rem; }
   </style>
+<meta property="og:title" content="HoopsMatic Draft Predictor"><meta property="og:description" content="NBA mock draft with aggregate consensus rankings."><meta property="og:type" content="website"><meta property="og:site_name" content="HoopsMatic"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="HoopsMatic Draft Predictor"><meta name="twitter:description" content="NBA mock draft with aggregate consensus rankings."><meta name="description" content="NBA mock draft with aggregate consensus rankings.">
 </head>
-<body>
+<body><style>
+#hm-nav{background:#fff!important;border-bottom:1px solid #e2e5e9!important;padding:0 20px!important;display:flex!important;align-items:center!important;gap:0!important;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif!important;font-size:16px!important;line-height:1.2!important;position:sticky!important;top:0!important;z-index:9999!important;height:auto!important;margin:0!important;overflow:visible!important;}
+#hm-nav *{line-height:1.2!important;}
+#hm-nav .hm-nav-brand{font-weight:800!important;font-size:15px!important;color:#1a1a2e!important;padding:10px 0!important;margin-right:24px!important;text-decoration:none!important;white-space:nowrap!important;display:flex!important;align-items:center!important;background:none!important;border:none!important;box-shadow:none!important;}
+#hm-nav .hm-nav-brand svg{display:inline-block!important;vertical-align:middle!important;flex-shrink:0!important;width:20px!important;height:20px!important;}
+#hm-nav .hm-nav-link{font-size:13px!important;font-weight:500!important;color:#5a6070!important;text-decoration:none!important;padding:9px 12px!important;border-bottom:2px solid transparent!important;transition:color .15s,border-color .15s!important;white-space:nowrap!important;background:none!important;}
+#hm-nav .hm-nav-link:hover{color:#1a1a2e!important;}
+#hm-nav .hm-nav-link.hm-nav-active{color:#3b82f6!important;border-bottom-color:#3b82f6!important;font-weight:600!important;}
+#hm-nav-burger{display:none!important;background:none!important;border:0!important;color:#5a6070!important;cursor:pointer!important;padding:8px!important;margin-left:auto!important;border-radius:6px!important;}
+#hm-nav-burger:hover{background:#f3f4f6!important;color:#1a1a2e!important;}
+#hm-burger-menu{display:none;position:absolute;top:100%;right:1rem;background:#fff;border:1px solid #e2e5e9;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.12);padding:.4rem 0;min-width:220px;z-index:10000;flex-direction:column;}
+#hm-burger-menu.hm-burger-open{display:flex!important;}
+#hm-burger-menu .hm-burger-link{font-size:.85rem!important;font-weight:500!important;color:#1a1a2e!important;text-decoration:none!important;padding:.55rem 1rem!important;white-space:nowrap!important;background:none!important;border-left:3px solid transparent!important;}
+#hm-burger-menu .hm-burger-link:hover{background:#f8f9fa!important;}
+#hm-burger-menu .hm-burger-link.hm-burger-active{color:#3b82f6!important;border-left-color:#3b82f6!important;background:#eff6ff!important;}
+@media(max-width:760px){
+  #hm-nav{padding:0 calc(28px + env(safe-area-inset-right, 0px)) 0 8px!important;flex-wrap:nowrap!important;position:relative!important;overflow:visible!important;}
+  #hm-nav .hm-nav-brand{font-size:12.5px!important;margin-right:4px!important;padding:10px 0!important;}
+  #hm-nav .hm-nav-brand svg{width:16px!important;height:16px!important;margin-right:4px!important;}
+  #hm-nav .hm-nav-link{font-size:10px!important;padding:8px 4px!important;letter-spacing:-.01em!important;}
+  #hm-nav .hm-nav-secondary{display:none!important;}
+  #hm-nav-burger{display:flex!important;align-items:center!important;margin-left:auto!important;padding:8px!important;flex-shrink:0!important;}
+  #hm-burger-menu{right:calc(28px + env(safe-area-inset-right, 0px))!important;}
+}
+</style><nav id="hm-nav"><a href="https://hoopsmatic.com/" class="hm-nav-brand"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;margin-right:6px;flex-shrink:0"><circle cx="10" cy="10" r="10" fill="#E8531A"/><path d="M10 0C10 0 10 20 10 20" stroke="#7A2800" stroke-width="1.2"/><path d="M0 10C0 10 20 10 20 10" stroke="#7A2800" stroke-width="1.2"/><path d="M2.9 3.5C2.9 3.5 10 9.5 10 10C10 10.5 17.1 16.5 17.1 16.5" stroke="#7A2800" stroke-width="1.2"/><path d="M17.1 3.5C17.1 3.5 10 9.5 10 10C10 10.5 2.9 16.5 2.9 16.5" stroke="#7A2800" stroke-width="1.2"/><circle cx="10" cy="10" r="10" fill="none" stroke="#C44010" stroke-width="0.5"/></svg>HoopsMatic</a><a href="https://hoopsmatic.com/" class="hm-nav-link hm-nav-priority">Trade Machine</a><a href="https://hoopsmatic.com/roster" class="hm-nav-link hm-nav-priority">Roster Manager</a><a href="https://hoopsmatic.com/salary-season-finder" class="hm-nav-link hm-nav-priority">Salary Finder</a><a href="https://hoopsmatic.com/contracts" class="hm-nav-link hm-nav-secondary">Contracts</a><a href="https://hoopsmatic.com/compare" class="hm-nav-link hm-nav-secondary">Compare Players</a><a href="https://hoopsmatic.com/compare-seasons" class="hm-nav-link hm-nav-secondary">Compare Seasons</a><a href="https://hoopsmatic.com/depth-charts" class="hm-nav-link hm-nav-secondary">Depth Charts</a><a href="https://hoopsmatic.com/defense" class="hm-nav-link hm-nav-secondary">Defensive Rankings</a><a href="https://hoopsmatic.com/real-value" class="hm-nav-link hm-nav-secondary">Real Value</a><a href="https://hoopsmatic.com/injuries" class="hm-nav-link hm-nav-secondary">Injuries</a><a href="https://hoopsmatic.com/draft" class="hm-nav-link hm-nav-active hm-nav-secondary">Draft Predictor</a><a href="https://hoopsmatic.com/draft-simulator" class="hm-nav-link hm-nav-secondary">Draft Simulator</a><button type="button" id="hm-nav-burger" aria-label="More tools" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 5H17M3 10H17M3 15H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><div id="hm-burger-menu" role="menu"><a href="https://hoopsmatic.com/" class="hm-burger-link">Trade Machine</a><a href="https://hoopsmatic.com/roster" class="hm-burger-link">Roster Manager</a><a href="https://hoopsmatic.com/salary-season-finder" class="hm-burger-link">Salary Finder</a><a href="https://hoopsmatic.com/contracts" class="hm-burger-link">Contracts</a><a href="https://hoopsmatic.com/compare" class="hm-burger-link">Compare Players</a><a href="https://hoopsmatic.com/compare-seasons" class="hm-burger-link">Compare Seasons</a><a href="https://hoopsmatic.com/depth-charts" class="hm-burger-link">Depth Charts</a><a href="https://hoopsmatic.com/defense" class="hm-burger-link">Defensive Rankings</a><a href="https://hoopsmatic.com/real-value" class="hm-burger-link">Real Value</a><a href="https://hoopsmatic.com/injuries" class="hm-burger-link">Injuries</a><a href="https://hoopsmatic.com/draft" class="hm-burger-link hm-burger-active">Draft Predictor</a><a href="https://hoopsmatic.com/draft-simulator" class="hm-burger-link">Draft Simulator</a></div></nav><script>(function(){
+    function init(){
+      var btn=document.getElementById('hm-nav-burger');
+      var menu=document.getElementById('hm-burger-menu');
+      if(!btn||!menu||btn._wired)return;
+      btn._wired=true;
+      btn.addEventListener('click',function(e){
+        e.stopPropagation();
+        var open=menu.classList.toggle('hm-burger-open');
+        btn.setAttribute('aria-expanded',open?'true':'false');
+      });
+      document.addEventListener('click',function(e){
+        if(!menu.classList.contains('hm-burger-open'))return;
+        if(menu.contains(e.target)||btn.contains(e.target))return;
+        menu.classList.remove('hm-burger-open');
+        btn.setAttribute('aria-expanded','false');
+      });
+      document.addEventListener('keydown',function(e){
+        if(e.key==='Escape'&&menu.classList.contains('hm-burger-open')){
+          menu.classList.remove('hm-burger-open');
+          btn.setAttribute('aria-expanded','false');
+        }
+      });
+    }
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
+    else init();
+    var tries=0;var t=setInterval(function(){tries++;init();if(tries>20)clearInterval(t);},150);
+  })();</script>
   <div class="container">
     <header>
       <div class="header-left">
-        <div class="header-tag">2025 NBA Draft</div>
+        <div class="header-tag">2026 NBA Draft</div>
         <h1>Draft <span>Predictor</span></h1>
         <p class="subtitle">Weighted aggregate of major mock drafts</p>
       </div>
       <div class="stats-bar" id="statsBar"></div>
     </header>
-    
     <div id="weightsBar" class="weights-bar" style="display:none;"></div>
-    
     <div id="loading" class="loading">
       <div class="loading-spinner"></div>
       <p class="loading-text">Loading draft predictions…</p>
     </div>
-    
     <div id="tableWrapper" class="table-wrapper" style="display:none;"></div>
-    
     <div id="undraftedBoard" class="undrafted-board" style="display:none;">
       <div class="undrafted-header">
         <h2>Undrafted <span>Watchlist</span></h2>
@@ -610,45 +247,18 @@
       </div>
       <div id="undraftedGrid" class="undrafted-grid"></div>
     </div>
-    
     <div id="error" class="error" style="display:none;"></div>
-    
-    <footer>
-      Aggregate rankings powered by <a href="https://hoopsmatic.com" target="_blank">HoopsMatic</a>
-    </footer>
+    <footer>Aggregate rankings powered by <a href="https://hoopsmatic.com" target="_blank">HoopsMatic</a></footer>
   </div>
-  
   <script>
-    // =====================================================
-    // CONFIG: Source weights (order = display order)
-    // =====================================================
     const SOURCE_WEIGHTS = {
-      'AGG RANK': 10,
-      'ESPN': 10,
-      'Athletic': 7,
-      'Bleacher': 6,
-      'Babcock': 6,
-      'NBADraft': 3,
-      'CBS Sports': 3,
-      'No Ceilings': 2,
-      'The Ringer': 2,
-      'USAT': 4,
-      'Yahoo!': 2,
-      'SB Nation': 1
+      'AGG RANK': 10, 'ESPN': 10, 'Athletic': 7, 'Bleacher': 6, 'Babcock': 6,
+      'NBADraft': 3, 'CBS Sports': 3, 'No Ceilings': 2, 'The Ringer': 2,
+      'USAT': 4, 'Yahoo!': 2, 'SB Nation': 1
     };
-    
     const SKIP_SOURCES = ['SI.com'];
-    
-    // =====================================================
-    // DATA URL — Update with your sheet's published CSV
-    // =====================================================
-    const SHEET_ID = '2PACX-1vSg6im6IYB6HXMGzQbmmBnLw9SfQLzxCSo8OfChxlJLhsB6BBCO0wPF_TMch0YgAbtFqYkwDWrsxRe7';
-    const DRAFT_GID = '965849547';
-    const CSV_URL = `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?gid=${DRAFT_GID}&single=true&output=csv`;
-    
-    // =====================================================
-    // CSV PARSER
-    // =====================================================
+    const CSV_URL = '/api/draft-csv';
+
     function parseCSV(text) {
       const rows = []; let current = '', inQuotes = false, row = [];
       for (let i = 0; i < text.length; i++) {
@@ -671,20 +281,13 @@
       if (current || row.length > 0) { row.push(current.trim()); if (row.length > 1 || row[0] !== '') rows.push(row); }
       return rows;
     }
-    
-    // =====================================================
-    // AGGREGATE COMPUTATION
-    // =====================================================
+
     function computeAggregate(csvText) {
       const rows = parseCSV(csvText);
       if (rows.length < 2) return { players: [], sources: [] };
-      
       const header = rows[0];
-      
-      // Find column indices for each source
       const sourceColumns = {};
       const activeSources = [];
-      
       for (const [sourceName, weight] of Object.entries(SOURCE_WEIGHTS)) {
         const idx = header.findIndex(h => h.trim() === sourceName);
         if (idx >= 0) {
@@ -692,24 +295,13 @@
           activeSources.push({ name: sourceName, weight, colIdx: idx });
         }
       }
-
-      // Find stats columns (PPG/RPG/APG) — these are manually populated in the
-      // sheet from the post-season NCAA extract. Looked up by header name so
-      // column order changes don't break the integration.
       const statCols = {
         PPG: header.findIndex(h => h.trim() === 'PPG'),
         RPG: header.findIndex(h => h.trim() === 'RPG'),
         APG: header.findIndex(h => h.trim() === 'APG'),
       };
-
-      // Combine invitations — looked up by header name so column position can
-      // shift without breaking. The bio block in this sheet has its own
-      // "PLAYER" header column; we want THAT column (not col 0, which is the
-      // mock-draft order without a label). The second "PLAYER" header reliably
-      // marks the bio block.
       const playerHeaders = [];
       header.forEach((h, idx) => { if ((h || '').trim() === 'PLAYER') playerHeaders.push(idx); });
-      // Bio block name col = the LAST "PLAYER" header — typically col 26.
       const bioNameIdx = playerHeaders.length ? playerHeaders[playerHeaders.length - 1] : -1;
       const dcIdx = header.findIndex(h => h.trim() === 'DRAFT COMBINE');
       const glIdx = header.findIndex(h => h.trim() === 'GL COMBINE');
@@ -724,11 +316,6 @@
           if (dc || gl) combineByName[bn] = { dc, gl };
         }
       }
-
-      // Per-prospect bio data — position, age, school/club, country.
-      // Lives in the right-side "bio block": player name is at the LAST PLAYER
-      // header column (bioNameIdx); other fields are at known column headers.
-      // Used to enrich the Presto export with parenthetical descriptors.
       const posIdx = header.findIndex(h => h.trim() === 'POSITION');
       const schoolIdx = header.findIndex((h, i) => h.trim() === 'TEAM' && i > bioNameIdx);
       const countryIdx = header.findIndex(h => h.trim() === 'COUNTRY');
@@ -752,17 +339,6 @@
           }
         }
       }
-
-      // Pre-draft workouts. WO PLAYER (col AQ) names the player; WO TEAM (col AR)
-      // is the team they worked out for. Multiple rows can list the same player
-      // with different teams — each becomes a separate workout. Worked out for
-      // a team currently picking = +5% of total source weight added to that
-      // player's vote at the team's pick slot (see cascade below).
-      //
-      // WO TEAM values in the sheet are typically full team names ("Memphis",
-      // "LA Clippers"); pickTeamMap values are 3-letter abbreviations ("MEM",
-      // "LAC"). Normalize WO TEAM → abbreviation before storing so the cascade
-      // .has() check matches reliably.
       const TEAM_NAME_TO_ABBR = {
         'ATL':'ATL','ATLANTA':'ATL','ATLANTA HAWKS':'ATL','HAWKS':'ATL',
         'BOS':'BOS','BOSTON':'BOS','BOSTON CELTICS':'BOS','CELTICS':'BOS',
@@ -797,11 +373,11 @@
       };
       const normalizeTeam = (raw) => {
         const k = (raw || '').trim().toUpperCase();
-        return TEAM_NAME_TO_ABBR[k] || k; // fall through to raw if unknown
+        return TEAM_NAME_TO_ABBR[k] || k;
       };
       const woPlayerIdx = header.findIndex(h => h.trim() === 'WO PLAYER');
       const woTeamIdx = header.findIndex(h => h.trim() === 'WO TEAM');
-      const workoutsByPlayer = {}; // name -> Set of team abbrevs
+      const workoutsByPlayer = {};
       if (woPlayerIdx >= 0 && woTeamIdx >= 0) {
         for (let i = 1; i < rows.length; i++) {
           const r = rows[i];
@@ -813,41 +389,26 @@
           }
         }
       }
-      
-      // Player name column (first column)
       const nameIdx = 0;
-      
-      // Pick-to-team mapping (column P=15 is pick position, column Q=16 is team)
-      const pickTeamMap = {}; // pick number -> team abbreviation
+      const pickTeamMap = {};
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
         const pickNum = parseInt(row[15]);
         const team = row[16]?.trim();
-        if (pickNum && team) {
-          pickTeamMap[pickNum] = team;
-        }
+        if (pickNum && team) { pickTeamMap[pickNum] = team; }
       }
-      
-      // Parse all player data
       const rawPlayers = [];
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
         const name = row[nameIdx]?.trim();
         if (!name) continue;
-        
         const ranks = {};
         let hasAnyRank = false;
-        
         for (const src of activeSources) {
           const val = row[src.colIdx]?.trim();
-          if (val && !isNaN(parseInt(val))) {
-            ranks[src.name] = parseInt(val);
-            hasAnyRank = true;
-          }
+          if (val && !isNaN(parseInt(val))) { ranks[src.name] = parseInt(val); hasAnyRank = true; }
         }
-        
         if (hasAnyRank) {
-          // Pull PPG/RPG/APG if columns are present; empty/missing → undefined
           const readStat = (idx) => {
             if (idx < 0) return undefined;
             const v = row[idx]?.trim();
@@ -855,39 +416,26 @@
             return parseFloat(v);
           };
           rawPlayers.push({
-            name,
-            ranks,
-            ppg: readStat(statCols.PPG),
-            rpg: readStat(statCols.RPG),
-            apg: readStat(statCols.APG),
+            name, ranks,
+            ppg: readStat(statCols.PPG), rpg: readStat(statCols.RPG), apg: readStat(statCols.APG),
             combine: combineByName[name] || { dc: false, gl: false },
             workoutTeams: workoutsByPlayer[name] || new Set(),
             bio: bioByName[name] || null,
           });
         }
       }
-      
-      // For each source, determine N (how many players are ranked)
       const sourceMaxRanked = {};
       for (const src of activeSources) {
         let maxRank = 0;
         for (const p of rawPlayers) {
-          if (p.ranks[src.name] && p.ranks[src.name] > maxRank) {
-            maxRank = p.ranks[src.name];
-          }
+          if (p.ranks[src.name] && p.ranks[src.name] > maxRank) maxRank = p.ranks[src.name];
         }
         sourceMaxRanked[src.name] = maxRank;
       }
-      
-      // Compute weighted score for each player
       const players = rawPlayers.map(p => {
-        let weightedSum = 0;
-        let totalWeight = 0;
-        let sourcesRanked = 0;
+        let weightedSum = 0, totalWeight = 0, sourcesRanked = 0;
         const ranksArray = [];
-        
         const totalWeightAll = activeSources.reduce((sum, s) => sum + s.weight, 0);
-        
         for (const src of activeSources) {
           const rank = p.ranks[src.name];
           if (rank) {
@@ -898,78 +446,45 @@
             ranksArray.push(rank);
           }
         }
-        
         const score = totalWeightAll > 0 ? weightedSum / totalWeightAll : 0;
-        
-        // Consensus: standard deviation of ranks (lower = more consensus)
         let consensus = 0;
         if (ranksArray.length > 1) {
           const mean = ranksArray.reduce((a, b) => a + b, 0) / ranksArray.length;
           const variance = ranksArray.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / ranksArray.length;
           consensus = Math.sqrt(variance);
         }
-        
         return {
           name: p.name,
           score: Math.round(score * 100) / 100,
-          sourcesRanked,
-          totalSources: activeSources.length,
-          ranks: p.ranks,
+          sourcesRanked, totalSources: activeSources.length, ranks: p.ranks,
           consensus: Math.round(consensus * 10) / 10,
-          bestRank: Math.min(...ranksArray),
-          worstRank: Math.max(...ranksArray),
-          ppg: p.ppg,
-          rpg: p.rpg,
-          apg: p.apg,
-          combine: p.combine,
-          bio: p.bio,
-          // Flat boolean-as-number fields make the existing sort routine
-          // (which reads a[col] generically) work for these columns too.
+          bestRank: Math.min(...ranksArray), worstRank: Math.max(...ranksArray),
+          ppg: p.ppg, rpg: p.rpg, apg: p.apg,
+          combine: p.combine, bio: p.bio,
           dcInvite: (p.combine && p.combine.dc) ? 1 : 0,
           glInvite: (p.combine && p.combine.gl) ? 1 : 0,
-          // Pre-draft workouts. workoutTeams (Set) is used by the cascade
-          // simulation; workoutTeamsArr is the display form; workoutCount
-          // is exposed for sortability.
           workoutTeams: p.workoutTeams,
           workoutTeamsArr: Array.from(p.workoutTeams).sort(),
           workoutCount: p.workoutTeams ? p.workoutTeams.size : 0,
         };
       });
-      
-      // Sort by score descending
       players.sort((a, b) => b.score - a.score);
-      
-      // =====================================================
-      // CASCADING DRAFT SIMULATION
-      // Each source votes for their top remaining player,
-      // winner is removed, repeat for next pick.
-      // =====================================================
       const totalSourceWeight = activeSources.reduce((s, src) => s + src.weight, 0);
       const maxPicks = 60;
       const drafted = [];
       const available = new Set(players.map(p => p.name));
-      
-      // Build each source's ordered list
       const sourceLists = {};
       for (const src of activeSources) {
         const list = [];
         for (const p of players) {
-          if (p.ranks[src.name]) {
-            list.push({ name: p.name, rank: p.ranks[src.name] });
-          }
+          if (p.ranks[src.name]) list.push({ name: p.name, rank: p.ranks[src.name] });
         }
         list.sort((a, b) => a.rank - b.rank);
         sourceLists[src.name] = list;
       }
-      
-      // Pick history: snapshot of vote state at each pick. Used to compute
-      // gap-to-pick for any player's workout teams below.
       const pickHistory = [];
-
       for (let pick = 1; pick <= maxPicks; pick++) {
         if (available.size === 0) break;
-        
-        // Each source votes for their top remaining player
         const votes = {};
         for (const src of activeSources) {
           const topPick = sourceLists[src.name].find(e => available.has(e.name));
@@ -978,15 +493,6 @@
             votes[topPick.name] += src.weight;
           }
         }
-        
-        // Workout boost: any AVAILABLE player who worked out for the team
-        // picking at this slot gets +5% of total source weight added to
-        // their vote. Critically, this includes players with zero
-        // source-votes at this pick — a workout alone is enough to put
-        // someone in contention (worth roughly 5% probability).
-        // An earlier implementation only boosted players already getting
-        // source votes, which silently zeroed out the workout signal for
-        // anyone projected later than their workout team's pick.
         const teamPicking = pickTeamMap[pick];
         const workoutBoostBy = {};
         if (teamPicking) {
@@ -999,85 +505,52 @@
             }
           }
         }
-        
-        // Sort candidates by votes. Cap pct at 100 so a workout-boosted
-        // player who already had ~100% doesn't display as 105%.
         const candidates = Object.entries(votes)
           .map(([name, weight]) => ({ name, weight, pct: Math.min(100, Math.round((weight / totalSourceWeight) * 100)) }))
           .sort((a, b) => b.pct - a.pct);
-        
         if (candidates.length === 0) break;
-        
         const winner = candidates[0];
         const player = players.find(p => p.name === winner.name);
-        
         player.finalRank = pick;
         player.simPct = winner.pct;
         player.simPick = pick;
-        // Flag rows where the workout-team match actually changed the vote
-        // total at the team's pick slot (whether or not it changed the
-        // outcome — a player who would've won anyway still got the bonus).
         player.workoutBoostApplied = !!workoutBoostBy[winner.name];
-
-        // Record this pick's state so we can compute gap-to-pick for any
-        // player's workout teams. votes is the post-boost weight map.
         pickHistory.push({
-          pick,
-          team: teamPicking,
-          winnerName: winner.name,
-          winnerWeight: winner.weight,
-          winnerPct: winner.pct,
-          votes: { ...votes },
+          pick, team: teamPicking, winnerName: winner.name,
+          winnerWeight: winner.weight, winnerPct: winner.pct, votes: { ...votes },
         });
         drafted.push(player);
         available.delete(winner.name);
       }
-
-      // For each player with workouts, find their gap-to-pick across all
-      // their workout teams. Useful for "how close was X to being picked by
-      // Y?" — surfaces in the WO column tooltip. Records weight + percentage
-      // points behind the winner at each of their workout teams' pick slots.
       for (const p of players) {
         if (!p.workoutTeams || p.workoutTeams.size === 0) continue;
         const gaps = [];
         for (const woTeam of p.workoutTeamsArr) {
           const teamPicks = pickHistory.filter(h => h.team === woTeam);
           for (const ph of teamPicks) {
-            // Only meaningful if player was still available at that pick.
             if (p.finalRank <= ph.pick) continue;
             const playerWeight = ph.votes[p.name] || 0;
             const gap = ph.winnerWeight - playerWeight;
             const gapPct = Math.round((gap / totalSourceWeight) * 100 * 10) / 10;
             gaps.push({
-              team: woTeam,
-              pick: ph.pick,
-              winner: ph.winnerName,
+              team: woTeam, pick: ph.pick, winner: ph.winnerName,
               winnerPct: ph.winnerPct,
               playerWeight: Math.round(playerWeight * 10) / 10,
-              gap: Math.round(gap * 10) / 10,
-              gapPct,
+              gap: Math.round(gap * 10) / 10, gapPct,
             });
           }
         }
         gaps.sort((a, b) => a.gap - b.gap);
         p.workoutGaps = gaps;
       }
-      
-      // Add undrafted players after pick 60
       let undraftedRank = maxPicks + 1;
       players.filter(p => available.has(p.name)).forEach(p => {
         p.finalRank = undraftedRank++;
-        p.simPct = 0;
-        p.simPick = null;
+        p.simPct = 0; p.simPick = null;
         drafted.push(p);
       });
-      
       return { players: drafted, sources: activeSources, sourceMaxRanked, pickTeamMap, availableSet: available };
     }
-    
-    // =====================================================
-    // RENDERING
-    // =====================================================
     function getRankTier(rank) {
       if (rank <= 5) return 'top5';
       if (rank <= 10) return 'top10';
@@ -1086,7 +559,6 @@
       if (rank <= 30) return 'first-round';
       return 'second-round';
     }
-    
     function getTierRowClass(rank) {
       if (rank <= 5) return 'tier-5';
       if (rank <= 10) return 'tier-10';
@@ -1095,7 +567,6 @@
       if (rank <= 30) return 'tier-first';
       return 'tier-second';
     }
-    
     function getMockRankClass(rank) {
       if (!rank) return 'unranked';
       if (rank <= 5) return 'top5-pick';
@@ -1105,7 +576,6 @@
       if (rank <= 30) return 'first-pick';
       return 'second-pick';
     }
-    
     function getScoreClass(score, maxScore) {
       const pct = score / maxScore;
       if (pct >= 0.85) return 'elite';
@@ -1113,14 +583,13 @@
       if (pct >= 0.3) return 'mid';
       return 'low';
     }
-    
     function getConsensusClass(consensus) {
       if (consensus <= 3) return 'tight';
       if (consensus <= 8) return 'moderate';
       if (consensus <= 15) return 'wide';
       return 'split';
     }
-    
+
     function render(data) {
       const { players, sources, sourceMaxRanked, pickTeamMap, availableSet } = data;
       if (players.length === 0) {
@@ -1128,360 +597,35 @@
         document.getElementById('error').style.display = 'block';
         return;
       }
-      
       const maxScore = players[0].score;
       const totalWeight = Object.values(SOURCE_WEIGHTS).reduce((a, b) => a + b, 0);
-      
-      // Stats bar
       document.getElementById('statsBar').innerHTML = `
-        <div class="stat-item">
-          <div class="stat-value">${players.length}</div>
-          <div class="stat-label">Prospects</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">${sources.length}</div>
-          <div class="stat-label">Sources</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">${totalWeight}</div>
-          <div class="stat-label">Total Weight</div>
-        </div>
+        <div class="stat-item"><div class="stat-value">${players.length}</div><div class="stat-label">Prospects</div></div>
+        <div class="stat-item"><div class="stat-value">${sources.length}</div><div class="stat-label">Sources</div></div>
+        <div class="stat-item"><div class="stat-value">${totalWeight}</div><div class="stat-label">Total Weight</div></div>
       `;
-      
-      // Weights bar
       const weightsBar = document.getElementById('weightsBar');
-      weightsBar.innerHTML = `
-        <span class="weights-label">Weights:</span>
-        ${sources.map(s => `
-          <span class="weight-chip">
-            ${s.name} <span class="w">×${s.weight}</span>
-          </span>
-        `).join('')}
-      `;
+      weightsBar.innerHTML = `<span class="weights-label">Weights:</span>${sources.map(s => `<span class="weight-chip">${s.name} <span class="w">×${s.weight}</span></span>`).join('')}`;
       weightsBar.style.display = 'flex';
-      
-      // Table
-      let html = '<table><thead><tr>';
-      html += '<th class="col-rank" data-col="finalRank" data-type="num" title="Final predicted draft position based on the weighted aggregation of all sources">Rank</th>';
-      html += '<th data-col="team" data-type="str" style="width:55px">Team</th>';
-      html += '<th class="col-player" data-col="name" data-type="str">Player</th>';
-      html += '<th class="col-score" data-col="score" data-type="num" title="Aggregated weighted score across all mock draft sources — lower is better (closer to #1)">Score</th>';
-      html += '<th class="col-sources" data-col="sourcesRanked" data-type="num" title="Number of mock draft sources that included this player in their rankings">Srcs</th>';
-      html += '<th data-col="consensus" data-type="num" title="Spread between the highest and lowest mock-draft placement for this player (smaller = more agreement across sources)">Spread</th>';
-      html += '<th data-col="simPct" data-type="num" title="Simulated probability the player is drafted at this exact slot">Prob</th>';
-      html += '<th data-col="ppg" data-type="num" title="Points per game in 2025-26 college season (empty = international/no NCAA data)">PPG</th>';
-      html += '<th data-col="rpg" data-type="num" title="Rebounds per game in 2025-26 college season (empty = international/no NCAA data)">RPG</th>';
-      html += '<th data-col="apg" data-type="num" title="Assists per game in 2025-26 college season (empty = international/no NCAA data)">APG</th>';
-      html += '<th data-col="dcInvite" data-type="num" title="NBA Draft Combine — invited">DC</th>';
-      html += '<th data-col="glInvite" data-type="num" title="G League Combine — invited">GL</th>';
-      html += '<th data-col="workoutCount" data-type="num" title="Pre-draft workouts on file. ★ = worked out for the team predicted to draft them — that match adds +5% to the player\'s vote at that pick slot.">WO</th>';
-      
-      for (const src of sources) {
-        const shortName = src.name.replace('AGG RANK', 'AGG')
-                                   .replace('CBS Sports', 'CBS')
-                                   .replace('No Ceilings', 'NoCeil')
-                                   .replace('SB Nation', 'SBN')
-                                   .replace('Bleacher', 'BR')
-                                   .replace('Babcock', 'Bab')
-                                   .replace('Athletic', 'Ath');
-        const fullLabel = src.name.replace(/"/g, '&quot;');
-        html += `<th data-col="mock_${src.name}" data-type="num" title="${fullLabel} — weight ×${src.weight}">${shortName}<br><span style="font-size:0.6rem;color:var(--text-muted)">×${src.weight}</span></th>`;
-      }
-      
-      html += '</tr></thead><tbody>';
-      
-      players.forEach((p, i) => {
-        const tier = getRankTier(p.finalRank);
-        const tierRow = getTierRowClass(p.finalRank);
-        const scoreClass = getScoreClass(p.score, maxScore);
-        const scorePct = (p.score / maxScore) * 100;
-        const consensusClass = getConsensusClass(p.consensus);
-        const maxConsensus = 30;
-        const consensusPct = Math.min(100, ((maxConsensus - p.consensus) / maxConsensus) * 100);
-        
-        html += `<tr class="${tierRow}" style="animation-delay: ${Math.min(i * 0.02, 1)}s">`;
-        html += `<td class="rank-cell ${tier}">${p.finalRank}</td>`;
-        const teamForPick = pickTeamMap[p.finalRank] || '';
-        // Did this player's workout teams include the team predicted to draft them?
-        const woTeamMatch = !!(teamForPick && p.workoutTeams && p.workoutTeams.has(teamForPick));
-        const teamCellStyle = woTeamMatch
-          ? "font-family:'JetBrains Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--accent-gold)"
-          : "font-family:'JetBrains Mono',monospace;font-size:0.75rem;font-weight:600;color:var(--text-secondary)";
-        const teamCellTitle = woTeamMatch
-          ? ` title="${p.name} worked out for ${teamForPick} — workout boost applied to this pick"`
-          : '';
-        html += `<td${teamCellTitle} style="${teamCellStyle}">${teamForPick}</td>`;
-        html += `<td class="player-cell">${p.name}</td>`;
-        html += `<td>
-          <div class="score-bar-container">
-            <span class="score-cell ${scoreClass}">${p.score.toFixed(1)}</span>
-          </div>
-        </td>`;
-        html += `<td class="sources-cell"><span class="count">${p.sourcesRanked}</span><span class="total">/${p.totalSources}</span></td>`;
-        html += `<td class="consensus-cell">
-          <div class="consensus-bar-bg">
-            <div class="consensus-bar-fill ${consensusClass}" style="width: ${consensusPct}%"></div>
-          </div>
-        </td>`;
-        const pctColor = p.simPct >= 80 ? 'var(--accent-gold)' : p.simPct >= 50 ? 'var(--accent-green)' : p.simPct >= 30 ? 'var(--accent-blue)' : p.simPct > 0 ? 'var(--accent-purple)' : 'var(--text-muted)';
-        html += `<td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;font-weight:700;color:${pctColor}">${p.simPct > 0 ? p.simPct + '%' : '—'}</td>`;
-        // Per-game stats — mono font, muted "—" for prospects without NCAA data
-        const statCell = (v) => {
-          if (v === undefined || v === null || isNaN(v)) {
-            return `<td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text-muted)">—</td>`;
-          }
-          return `<td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;font-weight:600">${v.toFixed(1)}</td>`;
-        };
-        html += statCell(p.ppg);
-        html += statCell(p.rpg);
-        html += statCell(p.apg);
-        // Combine invitation cells. data-sort uses 1/0 so num-sort keeps invitees together.
-        const combineCell = (invited) => `<td data-sort="${invited ? 1 : 0}" style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.78rem">${invited ? '<span class="combine-tick">✓</span>' : '<span style="color:var(--text-muted)">—</span>'}</td>`;
-        html += combineCell(p.combine && p.combine.dc);
-        html += combineCell(p.combine && p.combine.gl);
-        // Pre-draft workouts cell. ★ when the predicted-pick team is in the
-        // workout set — that match got the +5% boost in the cascade. Tooltip
-        // shows gap-to-pick for each workout team (how close the player came
-        // to being picked by them).
-        const woArr = p.workoutTeamsArr || [];
-        const woCount = woArr.length;
-        if (woCount === 0) {
-          html += `<td data-sort="0" style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-muted)">—</td>`;
-        } else {
-          let woTitle = `Worked out for: ${woArr.join(', ')}`;
-          if (p.workoutGaps && p.workoutGaps.length > 0) {
-            const gapLines = p.workoutGaps.map(g => {
-              const ahead = g.gap < 0;
-              const sign = ahead ? 'AHEAD of' : 'behind';
-              const absGap = Math.abs(g.gap).toFixed(1);
-              const absPct = Math.abs(g.gapPct).toFixed(1);
-              return `  • ${g.team} (pick #${g.pick}): ${absGap} pts (${absPct}%) ${sign} winner ${g.winner} (${g.winnerPct}%)`;
-            });
-            woTitle += `\n\nClosest workout-team matches (sorted by gap):\n${gapLines.join('\n')}`;
-          } else if (woCount > 0) {
-            woTitle += `\n\n(Drafted before any workout team's pick — no gap to compute.)`;
-          }
-          const woDisplay = woArr.join(', ');
-          const safeTitle = woTitle.replace(/"/g, '&quot;');
-          if (woTeamMatch) {
-            html += `<td data-sort="${woCount}" title="${safeTitle}" style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.7rem;font-weight:700;color:var(--accent-gold)">★ ${woDisplay}</td>`;
-          } else {
-            html += `<td data-sort="${woCount}" title="${safeTitle}" style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.7rem">${woDisplay}</td>`;
-          }
-        }
-        
-        for (const src of sources) {
-          const rank = p.ranks[src.name];
-          const cls = getMockRankClass(rank);
-          html += `<td class="mock-rank ${cls}">${rank || '—'}</td>`;
-        }
-        
-        html += '</tr>';
-      });
-      
-      html += '</tbody></table>';
-      
       const wrapper = document.getElementById('tableWrapper');
-      wrapper.innerHTML = html;
+      wrapper.innerHTML = '<table><tbody></tbody></table>';
       wrapper.style.display = 'block';
-      // Stash the rendered player list + pickTeamMap on a global so the
-      // Presto generator can read them later without re-running compute.
-      // The data is always stashed so the editorial dot works the moment
-      // it's revealed.
       window.__draftPredictorLatest = { players, pickTeamMap };
-      // The editorial corner dot (Copy Presto Code) is hidden by default and
-      // only surfaces when the URL has `?ed=1`. Keeps the feature out of view
-      // for the general public; editors bookmark the gated URL.
-      const cpBtn = document.getElementById('btnCopyPresto');
-      if (cpBtn) {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('ed') === '1') {
-          cpBtn.style.display = 'block';
-        }
-      }
-      
-      // Sortable columns
-      setupSorting(players, sources, maxScore, pickTeamMap);
-      
-      // Undrafted watchlist
-      renderUndrafted(players, sources, sourceMaxRanked, availableSet);
     }
-    
-    // =====================================================
-    // UNDRAFTED WATCHLIST
-    // =====================================================
-    function renderUndrafted(players, sources, sourceMaxRanked, availableSet) {
-      const undrafted = players
-        .filter(p => availableSet.has(p.name))
-        .sort((a, b) => b.score - a.score);
-      
-      if (undrafted.length === 0) return;
-      
-      const maxScore = undrafted[0].score;
-      const grid = document.getElementById('undraftedGrid');
-      let html = '';
-      
-      // Source short names for chips
-      const shortNames = {
-        'AGG RANK': 'AGG', 'ESPN': 'ESPN', 'Athletic': 'ATH', 'Bleacher': 'BR',
-        'Babcock': 'BAB', 'NBADraft': 'NBAD', 'CBS Sports': 'CBS',
-        'No Ceilings': 'NC', 'USAT': 'USAT', 'SB Nation': 'SBN'
-      };
-      
-      undrafted.forEach((p, i) => {
-        const scorePct = maxScore > 0 ? (p.score / maxScore) * 100 : 0;
-        
-        html += `<div class="undrafted-card">`;
-        html += `<div class="undrafted-card-top">`;
-        html += `<span class="undrafted-rank">#${i + 1} UDFA</span>`;
-        html += `<span class="undrafted-name">${p.name}</span>`;
-        html += `<span class="undrafted-score">${p.score.toFixed(1)}</span>`;
-        html += `</div>`;
-        
-        // Source chips
-        html += `<div class="undrafted-sources">`;
-        for (const src of sources) {
-          if (p.ranks[src.name]) {
-            const sn = shortNames[src.name] || src.name;
-            html += `<span class="undrafted-source-chip">${sn} <span class="src-rank">#${p.ranks[src.name]}</span></span>`;
-          }
-        }
-        html += `</div>`;
-        
-        // Score bar
-        html += `<div class="undrafted-bar-row">`;
-        html += `<span class="undrafted-bar-label">Score</span>`;
-        html += `<div class="undrafted-bar-bg"><div class="undrafted-bar-fill" style="width: ${scorePct}%"></div></div>`;
-        html += `</div>`;
-        
-        html += `</div>`;
-      });
-      
-      grid.innerHTML = html;
-      document.getElementById('undraftedBoard').style.display = 'block';
-    }
-    
-    // =====================================================
-    // SORTABLE TABLE
-    // =====================================================
+
+    function renderUndrafted() {}
+    function setupSorting() {}
+
     let currentSort = { col: 'finalRank', dir: 'asc' };
-    
-    function setupSorting(players, sources, maxScore, pickTeamMap) {
-      document.querySelectorAll('thead th').forEach(th => {
-        th.addEventListener('click', () => {
-          const col = th.dataset.col;
-          const type = th.dataset.type;
-          if (!col) return;
-          
-          if (currentSort.col === col) {
-            currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
-          } else {
-            currentSort.col = col;
-            currentSort.dir = type === 'num' ? 'asc' : 'asc';
-            // For score, default descending (higher = better)
-            if (col === 'score') currentSort.dir = 'desc';
-            // For sourcesRanked, default descending
-            if (col === 'sourcesRanked') currentSort.dir = 'desc';
-            // Combine columns: invitees on top by default
-            if (col === 'dcInvite' || col === 'glInvite') currentSort.dir = 'desc';
-          }
-          
-          // Clear sort indicators
-          document.querySelectorAll('thead th').forEach(t => t.classList.remove('sorted-asc', 'sorted-desc'));
-          th.classList.add(currentSort.dir === 'asc' ? 'sorted-asc' : 'sorted-desc');
-          
-          const sorted = [...players];
-          sorted.sort((a, b) => {
-            let va, vb;
-            
-            if (col.startsWith('mock_')) {
-              const srcName = col.replace('mock_', '');
-              va = a.ranks[srcName] || 999;
-              vb = b.ranks[srcName] || 999;
-            } else if (col === 'name') {
-              va = a.name;
-              vb = b.name;
-            } else {
-              va = a[col];
-              vb = b[col];
-            }
-            
-            let cmp;
-            if (typeof va === 'string') {
-              cmp = va.localeCompare(vb);
-            } else {
-              // Missing numeric values (e.g. international prospects without NCAA stats)
-              // always sink to the bottom, regardless of sort direction.
-              const aBad = va === undefined || va === null || Number.isNaN(va);
-              const bBad = vb === undefined || vb === null || Number.isNaN(vb);
-              if (aBad && bBad) cmp = 0;
-              else if (aBad) return 1;   // a sinks
-              else if (bBad) return -1;  // b sinks
-              else cmp = va - vb;
-            }
-            
-            return currentSort.dir === 'desc' ? -cmp : cmp;
-          });
-          
-          // Re-render tbody only
-          const tbody = document.querySelector('tbody');
-          let html = '';
-          
-          sorted.forEach((p, i) => {
-            const tier = getRankTier(p.finalRank);
-            const tierRow = getTierRowClass(p.finalRank);
-            const scoreClass = getScoreClass(p.score, maxScore);
-            const consensusClass = getConsensusClass(p.consensus);
-            const maxConsensus = 30;
-            const consensusPct = Math.min(100, ((maxConsensus - p.consensus) / maxConsensus) * 100);
-            
-            html += `<tr class="${tierRow}">`;
-            html += `<td class="rank-cell ${tier}">${p.finalRank}</td>`;
-            const teamForPick = pickTeamMap[p.finalRank] || '';
-            html += `<td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;font-weight:600;color:var(--text-secondary)">${teamForPick}</td>`;
-            html += `<td class="player-cell">${p.name}</td>`;
-            html += `<td>
-              <div class="score-bar-container">
-                <span class="score-cell ${scoreClass}">${p.score.toFixed(1)}</span>
-              </div>
-            </td>`;
-            html += `<td class="sources-cell"><span class="count">${p.sourcesRanked}</span><span class="total">/${p.totalSources}</span></td>`;
-            html += `<td class="consensus-cell">
-              <div class="consensus-bar-bg">
-                <div class="consensus-bar-fill ${consensusClass}" style="width: ${consensusPct}%"></div>
-              </div>
-            </td>`;
-            const pctColor2 = p.simPct >= 80 ? 'var(--accent-gold)' : p.simPct >= 50 ? 'var(--accent-green)' : p.simPct >= 30 ? 'var(--accent-blue)' : p.simPct > 0 ? 'var(--accent-purple)' : 'var(--text-muted)';
-            html += `<td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;font-weight:700;color:${pctColor2}">${p.simPct > 0 ? p.simPct + '%' : '—'}</td>`;
-            
-            for (const src of sources) {
-              const rank = p.ranks[src.name];
-              const cls = getMockRankClass(rank);
-              html += `<td class="mock-rank ${cls}">${rank || '—'}</td>`;
-            }
-            
-            html += '</tr>';
-          });
-          
-          tbody.innerHTML = html;
-        });
-      });
-    }
-    
-    // =====================================================
-    // INIT
-    // =====================================================
+
     async function init() {
       try {
         const response = await fetch(CSV_URL);
         if (!response.ok) throw new Error('Failed to fetch data');
         const text = await response.text();
-        
         const data = computeAggregate(text);
-        
         document.getElementById('loading').style.display = 'none';
         render(data);
-        
       } catch (err) {
         console.error('[Draft]', err);
         document.getElementById('loading').style.display = 'none';
@@ -1489,14 +633,10 @@
         document.getElementById('error').style.display = 'block';
       }
     }
-    
+
     // =================================================================
     // PRESTO HTML EXPORT
     // =================================================================
-    // Generates plain HTML suitable for pasting into Presto/HoopsHype
-    // articles. Inline styles only (Presto strips classes). Format mirrors
-    // the on-page rendering but flattened for a CMS-friendly structure.
-
     const TEAM_FULL_NAME_PRESTO = {
       ATL:'Atlanta Hawks', BOS:'Boston Celtics', BKN:'Brooklyn Nets',
       CHA:'Charlotte Hornets', CHI:'Chicago Bulls', CLE:'Cleveland Cavaliers',
@@ -1514,7 +654,6 @@
       return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
         ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
     }
-
     function prestoBio(p) {
       const bio = p.bio || null;
       if (!bio) return '';
@@ -1525,7 +664,6 @@
       else if (bio.country) bits.push(bio.country);
       return bits.join(' \u00b7 ');
     }
-
     function generatePrestoHtml() {
       const latest = window.__draftPredictorLatest;
       if (!latest) return '';
@@ -1534,10 +672,8 @@
         .filter(p => p.finalRank && p.finalRank >= 1 && p.finalRank <= 60)
         .sort((a, b) => a.finalRank - b.finalRank);
       if (!drafted.length) return '';
-
       let out = '<div style="font-family:sans-serif;max-width:700px;margin:0 auto">\n';
       out += '  <p style="margin:0 0 1em">The draft order is set after the lottery, and the Wizards are officially on the clock with the first pick. Beyond that, every front office is gathering information and working prospects out to figure out the best options for their rosters. Combining the most reliable mock drafts and workout information, we\u2019ve created a Draft Predictor to determine how the 2026 NBA Draft landscape looks right now. Here are the results:</p>\n';
-
       let inRoundTwo = false;
       out += '  <h3 style="margin:1.2em 0 .3em;font-size:1.15em;border-bottom:2px solid #b45309;padding-bottom:.15em">First Round</h3>\n';
       out += '  <ol style="margin:.3em 0 1em 0;padding-left:1.5em">\n';
@@ -1558,62 +694,73 @@
       out += '</div>';
       return out;
     }
-
     function copyPrestoCode() {
       const btn = document.getElementById('btnCopyPresto');
       if (!btn) return;
       const code = generatePrestoHtml();
-      if (!code) {
-        flashPrestoBtn(btn, 'Nothing to copy', 'failed');
-        return;
-      }
+      if (!code) { flashPrestoBtn(btn, 'Nothing to copy', 'failed'); return; }
       const finishOk = () => flashPrestoBtn(btn, '\u2713 Copied!', 'copied');
       const finishErr = () => prestoFallbackCopy(code, btn);
       const blob = new Blob([code], { type: 'text/plain' });
       if (navigator.clipboard && navigator.clipboard.write && typeof ClipboardItem !== 'undefined') {
-        navigator.clipboard.write([new ClipboardItem({ 'text/plain': blob })])
-          .then(finishOk).catch(finishErr);
+        navigator.clipboard.write([new ClipboardItem({ 'text/plain': blob })]).then(finishOk).catch(finishErr);
       } else if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(code).then(finishOk).catch(finishErr);
       } else {
         finishErr();
       }
     }
-
     function prestoFallbackCopy(text, btn) {
       const ta = document.createElement('textarea');
       ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.top = '-9999px';
+      ta.style.position = 'fixed'; ta.style.top = '-9999px';
       document.body.appendChild(ta);
       ta.select();
-      try {
-        document.execCommand('copy');
-        flashPrestoBtn(btn, '\u2713 Copied!', 'copied');
-      } catch (e) {
-        flashPrestoBtn(btn, 'Copy failed', 'failed');
-      }
+      try { document.execCommand('copy'); flashPrestoBtn(btn, '\u2713 Copied!', 'copied'); }
+      catch (e) { flashPrestoBtn(btn, 'Copy failed', 'failed'); }
       document.body.removeChild(ta);
     }
-
     function flashPrestoBtn(btn, msg, cls) {
-      // The dot is text-less; only the color class signals success/failure.
       btn.classList.remove('copied', 'failed');
       btn.classList.add(cls);
-      setTimeout(() => {
-        btn.classList.remove(cls);
-      }, 1800);
+      setTimeout(() => { btn.classList.remove(cls); }, 1800);
     }
+
+  // =================================================================
+  // PAGE-SPECIFIC TABLE OVERRIDE
+  // Replaces render() + init() with the simpler PICK/TEAM/PLAYER/POS
+  // /SCHOOL/AGE/COMBINE/G LEAGUE layout. PATCHED so that after rendering
+  // it (a) stashes player data on window.__draftPredictorLatest and
+  // (b) reveals the editorial corner dot on `?ed=1`.
+  // =================================================================
+  var _HM_ISO={'United States':'US','France':'FR','Australia':'AU','Canada':'CA','Spain':'ES','Germany':'DE','Serbia':'RS','Greece':'GR','Italy':'IT','Nigerian':'NG','Nigeria':'NG','Croatia':'HR','Lithuania':'LT','Bahamas':'BS','Benin':'BJ','DR Congo':'CD','Dominican Republic':'DO','Estonia':'EE','Finland':'FI','Israel':'IL','Mexico':'MX','Senegal':'SN','Brazil':'BR','Cameroon':'CM','Japan':'JP','South Sudan':'SS','New Zealand':'NZ','Montenegro':'ME','Turkey':'TR','UK':'GB','United Kingdom':'GB','Belgium':'BE','Ivory Coast':'CI','Slovenia':'SI','Latvia':'LV','Jamaica':'JM','Angola':'AO','Mali':'ML','Poland':'PL','China':'CN','Philippines':'PH','Czech Republic':'CZ','Czechia':'CZ','Austria':'AT','Bosnia':'BA','Bosnia and Herzegovina':'BA','Georgia':'GE','Sweden':'SE','Switzerland':'CH','Argentina':'AR','Colombia':'CO','Puerto Rico':'PR','Haiti':'HT','Egypt':'EG','Ukraine':'UA','Russia':'RU','South Korea':'KR','Taiwan':'TW','Denmark':'DK','Norway':'NO','Romania':'RO','Hungary':'HU','Portugal':'PT','Ireland':'IE','Netherlands':'NL','South Africa':'ZA','Ghana':'GH','Congo':'CG','Guinea':'GN','Gabon':'GA','Morocco':'MA','Tunisia':'TN','Algeria':'DZ','Kenya':'KE','India':'IN','Iran':'IR','Lebanon':'LB','Trinidad and Tobago':'TT','US Virgin Islands':'VI','Barbados':'BB','US':'US'};
+  function _hmFlag(c){var code=_HM_ISO[c];if(!code)return'';return'<img src="https://flagcdn.com/w40/'+code.toLowerCase()+'.png" width="20" height="15" style="vertical-align:middle;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,0.08)" alt="'+code+'">';}
+  var _hmBioLookup={}, _hmSheetOrder=[];
+  var _origRender=render;
+  render=function(data){
+    var players=data.players,pickTeamMap=data.pickTeamMap,availableSet=data.availableSet;
+    if(!players.length){document.getElementById('error').textContent='No draft data found.';document.getElementById('error').style.display='block';return;}
+    document.getElementById('statsBar').style.display='none';
+    var wb=document.getElementById('weightsBar');if(wb)wb.style.display='none';
+    var html='<table><thead><tr><th class="col-rank" data-col="finalRank" data-type="num">Pick</th><th data-col="team" data-type="str">Team</th><th></th><th class="col-player" data-col="name" data-type="str" style="text-align:left">Player</th><th>Pos</th><th style="text-align:left">School</th><th style="text-align:left">Age</th><th title="NBA Draft Combine">Combine</th><th title="G League Combine">G League</th></tr></thead><tbody>';
+    players.forEach(function(p){if(!p.finalRank||p.finalRank>60)return;var bio=_hmBioLookup[p.name]||{};var flag=_hmFlag(bio.country)||'';var tier=p.finalRank<=5?'top5':p.finalRank<=10?'top10':p.finalRank<=14?'lottery':p.finalRank<=20?'top20':p.finalRank<=30?'first-round':'second-round';var tierRow='tier-'+(p.finalRank<=5?'5':p.finalRank<=10?'10':p.finalRank<=14?'lottery':p.finalRank<=20?'20':p.finalRank<=30?'first':'second');var teamForPick=pickTeamMap[p.finalRank]||'';
+    var dc=bio.dc?'<span style="color:#16a34a;font-weight:700">✓</span>':'';
+    var gl=bio.gl?'<span style="color:#16a34a;font-weight:700">✓</span>':'';
+    html+='<tr class="'+tierRow+'"><td class="rank-cell '+tier+'">'+p.finalRank+'</td><td style="font-family:\'JetBrains Mono\',monospace;font-size:0.75rem;font-weight:600;color:var(--text-secondary)">'+teamForPick+'</td><td style="text-align:center;padding:0.3rem 0.15rem;width:28px">'+flag+'</td><td style="text-align:left;padding-right:0.25rem"><span class="player-name">'+p.name+'</span></td><td style="font-family:\'JetBrains Mono\',monospace;font-size:0.72rem;color:var(--text-secondary);padding:0.4rem 0.5rem">'+(bio.position||'')+'</td><td style="font-size:0.8rem;color:var(--text-secondary);text-align:left">'+(bio.college||'')+'</td><td style="font-family:\'JetBrains Mono\',monospace;font-size:0.72rem;color:var(--text-muted);text-align:left;white-space:nowrap">'+(bio.ageText||'')+'</td><td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:0.78rem">'+dc+'</td><td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:0.78rem">'+gl+'</td></tr>';});
+    html+='</tbody></table>';document.getElementById('tableWrapper').innerHTML=html;document.getElementById('tableWrapper').style.display='block';
+    var undraftedNames=new Set();players.forEach(function(p){if(availableSet.has(p.name))undraftedNames.add(p.name);});if(undraftedNames.size===0)return;
+    var ordered=[];_hmSheetOrder.forEach(function(name){if(undraftedNames.has(name)){ordered.push(name);undraftedNames.delete(name);}});undraftedNames.forEach(function(name){ordered.push(name);});
+    var uhtml='<table style="width:100%"><thead><tr><th></th><th style="text-align:left">Player</th><th>Pos</th><th style="text-align:left">School</th><th style="text-align:left">Age</th><th title="NBA Draft Combine">Combine</th><th title="G League Combine">G League</th></tr></thead><tbody>';
+    ordered.forEach(function(name){var bio=_hmBioLookup[name]||{};var flag=_hmFlag(bio.country)||'';var dc=bio.dc?'<span style="color:#16a34a;font-weight:700">✓</span>':'';var gl=bio.gl?'<span style="color:#16a34a;font-weight:700">✓</span>':'';uhtml+='<tr><td style="text-align:center;padding:0.3rem 0.15rem;width:28px">'+flag+'</td><td style="text-align:left;padding-right:0.25rem"><span class="player-name">'+name+'</span></td><td style="font-family:\'JetBrains Mono\',monospace;font-size:0.72rem;color:var(--text-secondary);padding:0.4rem 0.5rem">'+(bio.position||'')+'</td><td style="font-size:0.8rem;color:var(--text-secondary);text-align:left">'+(bio.college||'')+'</td><td style="font-family:\'JetBrains Mono\',monospace;font-size:0.72rem;color:var(--text-muted);text-align:left;white-space:nowrap">'+(bio.ageText||'')+'</td><td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:0.78rem">'+dc+'</td><td style="text-align:center;font-family:\'JetBrains Mono\',monospace;font-size:0.78rem">'+gl+'</td></tr>';});
+    uhtml+='</tbody></table>';var grid=document.getElementById('undraftedGrid');grid.className='table-wrapper';grid.innerHTML=uhtml;document.getElementById('undraftedBoard').style.display='block';
+  };
+  var _origInit=init;
+  init=async function(){try{var response=await fetch(CSV_URL);if(!response.ok)throw new Error('Failed to fetch data');var text=await response.text();var rows=parseCSV(text);if(rows.length>1){for(var i=1;i<rows.length;i++){var bioName=(rows[i][26]||'').trim();if(bioName){_hmBioLookup[bioName]={country:(rows[i][30]||'').trim(),position:(rows[i][36]||'').trim(),college:(rows[i][37]||'').trim(),ageText:(rows[i][34]||'').trim(),dc:(rows[i][39]||'').trim().toUpperCase()==='YES',gl:(rows[i][40]||'').trim().toUpperCase()==='YES'};}var sheetName=(rows[i][0]||'').trim();if(sheetName)_hmSheetOrder.push(sheetName);}}var data=computeAggregate(text);document.getElementById('loading').style.display='none';render(data);window.__draftPredictorLatest={players:data.players,pickTeamMap:data.pickTeamMap};var cpBtn=document.getElementById('btnCopyPresto');if(cpBtn){var params=new URLSearchParams(window.location.search);if(params.get('ed')==='1')cpBtn.style.display='block';}}catch(err){console.error('Error:',err);document.getElementById('loading').style.display='none';document.getElementById('error').textContent='Error loading draft data: '+err.message;document.getElementById('error').style.display='block';}};
 
     init();
   </script>
-  <!-- Editorial corner dot (intentionally undescriptive — used to
-       generate a Presto-pasteable HTML export of the current draft
-       order. Public visitors who notice it won't know what it is). -->
-  <div id="btnCopyPresto"
-       onclick="copyPrestoCode()"
-       aria-hidden="true"
-       title=""
-       style="display:none"></div>
+  <!-- Editorial corner dot — generates Presto HTML on click. Hidden by
+       default; surfaces only when URL contains ?ed=1 -->
+  <div id="btnCopyPresto" onclick="copyPrestoCode()" aria-hidden="true" title="" style="display:none"></div>
 </body>
 </html>
